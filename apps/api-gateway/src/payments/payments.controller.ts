@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, RawBodyRequest, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { SERVICES, PAYMENT_PATTERNS } from '@autonova/types';
@@ -33,10 +33,10 @@ export class PaymentsController {
 
   /** Stripe webhook — no auth, verified by stripe signature */
   @Post('webhooks/stripe')
-  handleStripeWebhook(@Body() body: any, @Req() req: any) {
+  handleStripeWebhook(@Req() req: RawBodyRequest<any>) {
     return firstValueFrom(
       this.paymentsClient.send(PAYMENT_PATTERNS.HANDLE_STRIPE_WEBHOOK, {
-        payload: body,
+        payload: req.rawBody,
         signature: req.headers['stripe-signature'],
       }),
     );
@@ -44,10 +44,10 @@ export class PaymentsController {
 
   /** Paystack webhook — no auth, verified by paystack signature */
   @Post('webhooks/paystack')
-  handlePaystackWebhook(@Body() body: any, @Req() req: any) {
+  handlePaystackWebhook(@Req() req: RawBodyRequest<any>) {
     return firstValueFrom(
       this.paymentsClient.send(PAYMENT_PATTERNS.HANDLE_PAYSTACK_WEBHOOK, {
-        payload: body,
+        payload: req.rawBody?.toString(),
         signature: req.headers['x-paystack-signature'],
       }),
     );

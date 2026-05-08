@@ -1,10 +1,9 @@
-version: '3.8'
-
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: autonova-sqlserver
     environment:
+      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
       SA_PASSWORD: "YourStrong@Passw0rd"
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
@@ -13,20 +12,29 @@ services:
     volumes:
       - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong@Passw0rd", "-Q", "SELECT 1"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong@Passw0rd", "-Q", "SELECT 1", "-C"]
       interval: 10s
       timeout: 5s
       retries: 10
 
-  redis:
-    image: redis:7-alpine
-    container_name: autonova-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: autonova-sqlserver-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    entrypoint:
+      - /opt/mssql-tools18/bin/sqlcmd
+      - -S
+      - sqlserver
+      - -U
+      - sa
+      - -P
+      - "YourStrong@Passw0rd"
+      - -Q
+      - "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'autonova') CREATE DATABASE autonova"
+      - -C
+    restart: "no"
 
 volumes:
   sqlserver_data:
-  redis_data:

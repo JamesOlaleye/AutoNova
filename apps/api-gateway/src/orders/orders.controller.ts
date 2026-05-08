@@ -30,6 +30,8 @@ export class OrdersController {
   }
 
   @Get(':id')
+  @UseGuards(RolesGuard)
+  @Roles('DEALER_ADMIN', 'SALES_AGENT', 'FINANCE_MANAGER', 'PLATFORM_ADMIN')
   findOne(@Param('id') id: string, @Req() req: any) {
     return firstValueFrom(
       this.ordersClient.send(ORDER_PATTERNS.FIND_BY_ID, { id, tenantId: req.tenantId }),

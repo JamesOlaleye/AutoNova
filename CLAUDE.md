@@ -284,7 +284,7 @@ CUSTOMER         ← registered buyer — can view own orders, wishlist
 
 Backend:
 - [ ] `yarn install` — install all workspace dependencies
-- [ ] Copy `.env.example` → `.env`, fill in DB credentials
+- [ ] Copy `.env.development` → `.env`, DB credentials already set for local Docker
 - [ ] `docker-compose up -d` — start SQL Server + Redis
 - [ ] Boot all services: `yarn dev:backend`
 - [ ] Test auth flow: register → login → refresh → logout
@@ -397,8 +397,8 @@ cd C:\Users\HP\Development\autonova
 # 2. Start infrastructure
 docker-compose up -d        # SQL Server on 1433, Redis on 6379
 
-# 3. Copy env
-cp .env.example .env        # then fill in DB_PASSWORD and JWT secrets
+# 3. Copy env (choose your environment)
+cp .env.development .env    # dev: DB_PASSWORD + JWT secrets already set
 
 # 4. Install dependencies
 yarn install
@@ -458,7 +458,7 @@ X-Tenant-ID: <tenantId>
 
 ## 12. Environment Variables Reference
 
-See `.env.example` for the full list with descriptions. Key ones:
+See `.env.development` / `.env.staging` / `.env.production` for the full list with descriptions. Key ones:
 
 | Variable | Used by |
 |----------|---------|

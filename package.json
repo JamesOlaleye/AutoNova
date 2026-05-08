@@ -8,7 +8,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:backend": "turbo run dev --filter=@autonova/api-gateway --filter=@autonova/auth-service --filter=@autonova/tenants-service --filter=@autonova/users-service --filter=@autonova/vehicles-service --filter=@autonova/leads-service --filter=@autonova/orders-service --filter=@autonova/notifications-service --filter=@autonova/media-service --filter=@autonova/analytics-service --filter=@autonova/payments-service",
+    "dev:backend": "turbo run dev --concurrency=13 --filter=@autonova/api-gateway --filter=@autonova/auth-service --filter=@autonova/tenants-service --filter=@autonova/users-service --filter=@autonova/vehicles-service --filter=@autonova/leads-service --filter=@autonova/orders-service --filter=@autonova/notifications-service --filter=@autonova/media-service --filter=@autonova/analytics-service --filter=@autonova/payments-service",
     "dev:web": "turbo run dev --filter=@autonova/web",
     "dev:dashboard": "turbo run dev --filter=@autonova/dashboard",
     "dev:admin": "turbo run dev --filter=@autonova/admin",

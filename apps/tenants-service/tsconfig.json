@@ -2,12 +2,8 @@
   "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "paths": {
-      "@autonova/types": ["../../packages/types/src"],
-      "@autonova/types/*": ["../../packages/types/src/*"],
-      "@autonova/database": ["../../packages/database/src"],
-      "@autonova/database/*": ["../../packages/database/src/*"]
-    }
+    "rootDir": "./src",
+    "baseUrl": "."
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*spec.ts"]

@@ -7,7 +7,6 @@ import {
 
 @Entity('vehicles')
 @Index(['tenantId'])
-@Index(['status'])
 export class Vehicle extends BaseEntity {
   @Column()
   make: string;
@@ -45,7 +44,7 @@ export class Vehicle extends BaseEntity {
   @Column()
   color: string;
 
-  @Column({ nullable: true, unique: true })
+  @Column({ nullable: true })
   vin: string;
 
   @Column({ nullable: true })

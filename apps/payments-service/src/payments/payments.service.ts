@@ -13,7 +13,7 @@ export class PaymentsService {
   private stripe: Stripe;
 
   constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-11-20.acacia' });
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-06-20' });
   }
 
   async createSubscription(payload: CreateSubscriptionPayload): Promise<SubscriptionResponse> {
@@ -50,9 +50,9 @@ export class PaymentsService {
     return { received: true };
   }
 
-  async handlePaystackWebhook(payload: any, signature: string): Promise<{ received: boolean }> {
+  async handlePaystackWebhook(payload: string, signature: string): Promise<{ received: boolean }> {
     const hash = createHmac('sha512', process.env.PAYSTACK_SECRET_KEY || '')
-      .update(JSON.stringify(payload))
+      .update(payload)
       .digest('hex');
 
     if (hash !== signature) {
@@ -60,7 +60,8 @@ export class PaymentsService {
       return { received: false };
     }
 
-    this.logger.log(`[PAYSTACK WEBHOOK] ${payload?.event}`);
+    const parsed = JSON.parse(payload);
+    this.logger.log(`[PAYSTACK WEBHOOK] ${parsed?.event}`);
     // TODO: handle charge.success, subscription.disable, etc.
     return { received: true };
   }
