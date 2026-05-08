@@ -2,24 +2,24 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
-  @ApiProperty({ example: 'admin@freshautosworld.com' })
+  @ApiProperty({ description: 'User email address' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({ example: 'Admin1234!', minLength: 8 })
+  @ApiProperty({ description: 'Password — minimum 8 characters', minLength: 8 })
   @IsString()
   @MinLength(8)
   password: string;
 
-  @ApiProperty({ example: 'Fresh' })
+  @ApiProperty({ description: 'First name' })
   @IsString()
   firstName: string;
 
-  @ApiProperty({ example: 'Admin' })
+  @ApiProperty({ description: 'Last name' })
   @IsString()
   lastName: string;
 
-  @ApiPropertyOptional({ example: '+2348012345678' })
+  @ApiPropertyOptional({ description: 'Phone number in E.164 format e.g. +2348012345678' })
   @IsOptional()
   @IsString()
   phone?: string;

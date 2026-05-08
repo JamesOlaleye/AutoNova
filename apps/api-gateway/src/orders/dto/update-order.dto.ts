@@ -12,24 +12,24 @@ export class UpdateOrderDto {
   @IsString()
   salesAgentId?: string;
 
-  @ApiPropertyOptional({ example: 14000000 })
+  @ApiPropertyOptional({ description: 'Revised sale price in smallest currency unit' })
   @IsOptional()
   @IsNumber()
   @Min(0)
   salePrice?: number;
 
-  @ApiPropertyOptional({ example: 1500000 })
+  @ApiPropertyOptional({ description: 'Down payment amount' })
   @IsOptional()
   @IsNumber()
   @Min(0)
   downPayment?: number;
 
-  @ApiPropertyOptional({ example: 36 })
+  @ApiPropertyOptional({ description: 'Financing term in months' })
   @IsOptional()
   @IsNumber()
   financingTerm?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Internal notes for the deal' })
   @IsOptional()
   @IsString()
   notes?: string;

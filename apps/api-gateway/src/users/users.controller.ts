@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtPayload } from '@autonova/types';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -44,7 +44,7 @@ export class UsersController {
     return this.usersService.findOne(id, tenantId);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a user' })
   @ApiResponse({ status: 200, description: 'Updated user' })
   update(@Param('id') id: string, @Body() body: UpdateUserDto, @TenantId() tenantId: string) {

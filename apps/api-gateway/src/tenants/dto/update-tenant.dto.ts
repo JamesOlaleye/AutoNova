@@ -2,42 +2,42 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class UpdateTenantDto {
-  @ApiPropertyOptional({ example: 'Fresh Autos World' })
+  @ApiPropertyOptional({ description: 'Dealership display name' })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ example: 'NG' })
+  @ApiPropertyOptional({ description: 'ISO 3166-1 alpha-2 country code e.g. NG, GB' })
   @IsOptional()
   @IsString()
   country?: string;
 
-  @ApiPropertyOptional({ example: 'NGN' })
+  @ApiPropertyOptional({ description: 'ISO 4217 currency code e.g. NGN, GBP' })
   @IsOptional()
   @IsString()
   currency?: string;
 
-  @ApiPropertyOptional({ example: 'en-NG' })
+  @ApiPropertyOptional({ description: 'Locale code e.g. en-NG, en-GB' })
   @IsOptional()
   @IsString()
   locale?: string;
 
-  @ApiPropertyOptional({ example: 'info@freshautosworld.com' })
+  @ApiPropertyOptional({ description: 'Dealership contact email' })
   @IsOptional()
   @IsEmail()
   email?: string;
 
-  @ApiPropertyOptional({ example: '+2348012345678' })
+  @ApiPropertyOptional({ description: 'Phone in E.164 format e.g. +2348012345678' })
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiPropertyOptional({ example: '123 Lagos Street, Victoria Island' })
+  @ApiPropertyOptional({ description: 'Physical address' })
   @IsOptional()
   @IsString()
   address?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.autonova.io/logos/tenant.png' })
+  @ApiPropertyOptional({ description: 'Logo image URL' })
   @IsOptional()
   @IsString()
   logo?: string;

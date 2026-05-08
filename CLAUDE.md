@@ -496,6 +496,7 @@ yarn dev:dashboard
 - **No comments unless the WHY is non-obvious** — names should explain the what
 - **No `any` types in shared packages** — use types from `@autonova/types`
 - **Git commits follow conventional commits**: `feat:`, `fix:`, `chore:`, `docs:`
+- **Every tested endpoint must be logged** — after verifying an endpoint works, update `docs/api-test-log.md` with the exact request, response, dependencies, and business rules verified. Do not mark a phase complete without updating this file.
 
 ### api-gateway rules (strict)
 - **Controllers contain zero logic** — 3 lines max per method: guards/decorators + delegate
@@ -505,6 +506,7 @@ yarn dev:dashboard
 - **Every endpoint has `@ApiOperation` + `@ApiResponse`** — Swagger must be self-documenting
 - **Every body is a typed DTO** — never `@Body() body: any`
 - **Every query is a typed DTO** — extends `PaginationDto` for list endpoints
+- **PUT vs PATCH**: use `@Put` only for full resource replacement; use `@Patch` for partial updates (all optional fields). When in doubt — if any field in the DTO is optional, it's `@Patch`
 
 ### Microservice rules
 - **Services return plain objects, not HTTP exceptions** — use `RpcException({ message, statusCode })`

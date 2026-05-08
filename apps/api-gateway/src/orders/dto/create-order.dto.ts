@@ -20,31 +20,31 @@ export class CreateOrderDto {
   @IsString()
   salesAgentId?: string;
 
-  @ApiProperty({ enum: ['PURCHASE', 'FINANCING', 'LEASE'], example: 'PURCHASE' })
+  @ApiProperty({ enum: ['PURCHASE', 'FINANCING', 'LEASE'] })
   @IsEnum(['PURCHASE', 'FINANCING', 'LEASE'])
   type: string;
 
-  @ApiProperty({ example: 14500000 })
+  @ApiProperty({ description: 'Agreed sale price in smallest currency unit' })
   @IsNumber()
   @Min(0)
   salePrice: number;
 
-  @ApiProperty({ example: 'NGN' })
+  @ApiProperty({ description: 'ISO 4217 currency code e.g. NGN, GBP' })
   @IsString()
   currency: string;
 
-  @ApiPropertyOptional({ example: 2000000 })
+  @ApiPropertyOptional({ description: 'Down payment amount' })
   @IsOptional()
   @IsNumber()
   @Min(0)
   downPayment?: number;
 
-  @ApiPropertyOptional({ example: 24, description: 'Financing term in months' })
+  @ApiPropertyOptional({ description: 'Financing term in months' })
   @IsOptional()
   @IsNumber()
   financingTerm?: number;
 
-  @ApiPropertyOptional({ example: 'Customer requests delivery by end of month.' })
+  @ApiPropertyOptional({ description: 'Internal notes for the deal' })
   @IsOptional()
   @IsString()
   notes?: string;

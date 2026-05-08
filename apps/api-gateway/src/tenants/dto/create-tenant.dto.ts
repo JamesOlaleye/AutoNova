@@ -2,31 +2,31 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CreateTenantDto {
-  @ApiProperty({ example: 'Fresh Autos World' })
+  @ApiProperty({ description: 'Dealership display name e.g. Fresh Autos World' })
   @IsString()
   name: string;
 
-  @ApiProperty({ example: 'freshautosworld', description: 'URL slug — immutable after creation' })
+  @ApiProperty({ description: 'URL slug — immutable after creation e.g. freshautosworld' })
   @IsString()
   slug: string;
 
-  @ApiProperty({ example: 'NG', description: 'ISO 3166-1 alpha-2 country code' })
+  @ApiProperty({ description: 'ISO 3166-1 alpha-2 country code e.g. NG, GB, US' })
   @IsString()
   country: string;
 
-  @ApiProperty({ example: 'NGN', description: 'ISO 4217 currency code' })
+  @ApiProperty({ description: 'ISO 4217 currency code e.g. NGN, GBP, USD' })
   @IsString()
   currency: string;
 
-  @ApiProperty({ example: 'en-NG' })
+  @ApiProperty({ description: 'Locale code e.g. en-NG, en-GB' })
   @IsString()
   locale: string;
 
-  @ApiProperty({ example: 'info@freshautosworld.com' })
+  @ApiProperty({ description: 'Dealership contact email' })
   @IsEmail()
   email: string;
 
-  @ApiPropertyOptional({ example: '+2348012345678' })
+  @ApiPropertyOptional({ description: 'Dealership phone in E.164 format e.g. +2348012345678' })
   @IsOptional()
   @IsString()
   phone?: string;

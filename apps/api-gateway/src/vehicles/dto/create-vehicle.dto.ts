@@ -2,29 +2,29 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateVehicleDto {
-  @ApiProperty({ example: 'Toyota' })
+  @ApiProperty({ description: 'Vehicle manufacturer e.g. Toyota, Honda' })
   @IsString()
   make: string;
 
-  @ApiProperty({ example: 'Camry' })
+  @ApiProperty({ description: 'Model name e.g. Camry, Corolla' })
   @IsString()
   model: string;
 
-  @ApiProperty({ example: 2022 })
+  @ApiProperty({ description: 'Manufacturing year e.g. 2022', minimum: 1900 })
   @IsNumber()
   @Min(1900)
   year: number;
 
-  @ApiProperty({ example: 15000000, description: 'Price in the smallest currency unit' })
+  @ApiProperty({ description: 'Asking price in the smallest currency unit e.g. 15000000 for NGN' })
   @IsNumber()
   @Min(0)
   price: number;
 
-  @ApiProperty({ example: 'NGN', description: 'ISO 4217 currency code' })
+  @ApiProperty({ description: 'ISO 4217 currency code e.g. NGN, GBP' })
   @IsString()
   currency: string;
 
-  @ApiProperty({ example: 45000 })
+  @ApiProperty({ description: 'Odometer reading' })
   @IsNumber()
   @Min(0)
   mileage: number;
@@ -34,15 +34,15 @@ export class CreateVehicleDto {
   @IsEnum(['KM', 'MILES'])
   mileageUnit?: string;
 
-  @ApiProperty({ enum: ['NEW', 'USED', 'CERTIFIED_USED'], example: 'USED' })
+  @ApiProperty({ enum: ['NEW', 'USED', 'CERTIFIED_USED'] })
   @IsEnum(['NEW', 'USED', 'CERTIFIED_USED'])
   condition: string;
 
-  @ApiProperty({ enum: ['AUTOMATIC', 'MANUAL', 'SEMI_AUTOMATIC'], example: 'AUTOMATIC' })
+  @ApiProperty({ enum: ['AUTOMATIC', 'MANUAL', 'SEMI_AUTOMATIC'] })
   @IsEnum(['AUTOMATIC', 'MANUAL', 'SEMI_AUTOMATIC'])
   transmission: string;
 
-  @ApiProperty({ enum: ['PETROL', 'DIESEL', 'HYBRID', 'ELECTRIC', 'LPG', 'CNG'], example: 'PETROL' })
+  @ApiProperty({ enum: ['PETROL', 'DIESEL', 'HYBRID', 'ELECTRIC', 'LPG', 'CNG'] })
   @IsEnum(['PETROL', 'DIESEL', 'HYBRID', 'ELECTRIC', 'LPG', 'CNG'])
   fuelType: string;
 
@@ -51,30 +51,30 @@ export class CreateVehicleDto {
   @IsEnum(['RHD', 'LHD'])
   driveType?: string;
 
-  @ApiProperty({ example: 'White' })
+  @ApiProperty({ description: 'Exterior colour e.g. White, Black, Silver' })
   @IsString()
   color: string;
 
-  @ApiPropertyOptional({ example: '1HGBH41JXMN109186' })
+  @ApiPropertyOptional({ description: 'Vehicle Identification Number (17 characters)' })
   @IsOptional()
   @IsString()
   vin?: string;
 
-  @ApiPropertyOptional({ example: '2.5L' })
+  @ApiPropertyOptional({ description: 'Engine displacement e.g. 2.5L, 1600cc' })
   @IsOptional()
   @IsString()
   engineSize?: string;
 
-  @ApiPropertyOptional({ example: 'Well maintained Toyota Camry in excellent condition.' })
+  @ApiPropertyOptional({ description: 'Detailed vehicle description for the listing' })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ example: ['Leather seats', 'Sunroof', 'Reverse camera'] })
+  @ApiPropertyOptional({ description: 'Array of feature strings e.g. ["Leather seats", "Sunroof"]' })
   @IsOptional()
   features?: string[];
 
-  @ApiPropertyOptional({ example: [] })
+  @ApiPropertyOptional({ description: 'Array of Cloudinary image URLs' })
   @IsOptional()
   images?: string[];
 }

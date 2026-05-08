@@ -4,37 +4,37 @@ import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class VehicleQueryDto extends PaginationDto {
-  @ApiPropertyOptional({ example: 'Toyota' })
+  @ApiPropertyOptional({ description: 'Filter by manufacturer e.g. Toyota' })
   @IsOptional()
   @IsString()
   make?: string;
 
-  @ApiPropertyOptional({ example: 'Camry' })
+  @ApiPropertyOptional({ description: 'Filter by model e.g. Camry' })
   @IsOptional()
   @IsString()
   model?: string;
 
-  @ApiPropertyOptional({ example: 2018 })
+  @ApiPropertyOptional({ description: 'Minimum manufacture year', minimum: 1900 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1900)
   yearMin?: number;
 
-  @ApiPropertyOptional({ example: 2024 })
+  @ApiPropertyOptional({ description: 'Maximum manufacture year' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   yearMax?: number;
 
-  @ApiPropertyOptional({ example: 5000000 })
+  @ApiPropertyOptional({ description: 'Minimum price in smallest currency unit' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
   priceMin?: number;
 
-  @ApiPropertyOptional({ example: 30000000 })
+  @ApiPropertyOptional({ description: 'Maximum price in smallest currency unit' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

@@ -2,17 +2,17 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({ example: 'Fresh' })
+  @ApiPropertyOptional({ description: 'First name' })
   @IsOptional()
   @IsString()
   firstName?: string;
 
-  @ApiPropertyOptional({ example: 'Admin' })
+  @ApiPropertyOptional({ description: 'Last name' })
   @IsOptional()
   @IsString()
   lastName?: string;
 
-  @ApiPropertyOptional({ example: '+2348012345678' })
+  @ApiPropertyOptional({ description: 'Phone in E.164 format e.g. +2348012345678' })
   @IsOptional()
   @IsString()
   phone?: string;
