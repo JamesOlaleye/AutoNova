@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { SERVICES } from '@autonova/types';
 import { LeadsController } from './leads.controller';
+import { LeadsGatewayService } from './leads.gateway.service';
 
 @Module({
   imports: [
@@ -17,5 +18,6 @@ import { LeadsController } from './leads.controller';
     ]),
   ],
   controllers: [LeadsController],
+  providers: [LeadsGatewayService],
 })
 export class LeadsModule {}

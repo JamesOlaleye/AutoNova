@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { SERVICES } from '@autonova/types';
 import { AuthController } from './auth.controller';
+import { AuthGatewayService } from './auth.gateway.service';
 
 @Module({
   imports: [
@@ -17,5 +18,6 @@ import { AuthController } from './auth.controller';
     ]),
   ],
   controllers: [AuthController],
+  providers: [AuthGatewayService],
 })
 export class AuthModule {}

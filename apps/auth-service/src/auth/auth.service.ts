@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { createHash, randomBytes } from 'crypto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import {
   AuthResponse,
   AuthTokens,

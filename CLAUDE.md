@@ -85,6 +85,25 @@ Multi-currency and multi-language are first-class concerns from day one.
 autonova/                         ← Turborepo root
 ├── apps/
 │   ├── api-gateway/              ← HTTP (port 3000) — only public-facing service
+│   │   └── src/
+│   │       ├── common/
+│   │       │   ├── filters/      ← RpcExceptionFilter (global RPC→HTTP mapping)
+│   │       │   ├── services/     ← BaseGatewayService (timeout + error handling)
+│   │       │   ├── decorators/   ← @TenantId(), @CurrentUser(), @Roles()
+│   │       │   ├── guards/       ← JwtAuthGuard, RolesGuard
+│   │       │   ├── strategies/   ← JWT strategy
+│   │       │   └── dto/          ← PaginationDto (shared base)
+│   │       ├── auth/
+│   │       │   ├── dto/          ← RegisterDto, LoginDto, RefreshTokenDto
+│   │       │   ├── auth.gateway.service.ts
+│   │       │   ├── auth.controller.ts
+│   │       │   └── auth.module.ts
+│   │       ├── tenants/          ← same pattern: dto/ + gateway.service + controller + module
+│   │       ├── users/
+│   │       ├── vehicles/
+│   │       ├── leads/
+│   │       ├── orders/
+│   │       └── payments/
 │   ├── auth-service/             ← TCP 3001
 │   ├── tenants-service/          ← TCP 3002
 │   ├── users-service/            ← TCP 3003
@@ -99,12 +118,12 @@ autonova/                         ← Turborepo root
 │   ├── dashboard/                ← Next.js 15, port 3101 (dealer dashboard)
 │   └── admin/                    ← Next.js 15, port 3102 (platform admin)
 ├── packages/
-│   ├── types/                    ← shared TypeScript types, DTOs, message patterns
-│   ├── database/                 ← TypeORM config helper + BaseEntity
+│   ├── types/                    ← shared TypeScript interfaces, payload types, message patterns
+│   ├── database/                 ← TypeORM config helper (createDatabaseConfig) + BaseEntity
 │   ├── config/                   ← shared tsconfig.base.json + prettier
 │   └── ui/                       ← shared React components (built out in Phase 1 frontend)
-├── docker-compose.yml            ← SQL Server + Redis for local dev
-├── .env.example                  ← all env vars documented
+├── docker-compose.yml            ← SQL Server (port 1433) + init service (creates autonova DB)
+├── .env.development              ← dev secrets (gitignored)
 └── turbo.json                    ← build pipeline
 ```
 
@@ -119,6 +138,7 @@ autonova/                         ← Turborepo root
 | ORM | TypeORM | Best NestJS SQL Server support |
 | Frontend | Next.js 15 (App Router) | SSR is non-negotiable — Google must index vehicle listing pages |
 | Auth | JWT + refresh tokens | Stateless access tokens (15min), rotatable refresh tokens (7d, stored hashed) |
+| Password hashing | bcryptjs | Pure JS replacement for bcrypt — no native compilation issues on Windows/Node 22 |
 | Payments | Stripe + Paystack | Stripe for UK/Global, Paystack for Nigeria/Africa — abstracted behind one service |
 | Media | Cloudinary | Free tier, auto-resize, global CDN, no infra to manage |
 | Email | Resend | Simpler API than SendGrid, generous free tier |
@@ -210,16 +230,43 @@ CUSTOMER         ← registered buyer — can view own orders, wishlist
 
 ### api-gateway (port 3000)
 - The ONLY service that accepts HTTP from the outside world
-- Resolves tenant from request
+- Resolves tenant from request (`X-Tenant-ID` header in dev, subdomain in prod)
 - Validates JWT locally (no call to auth-service per request)
-- Proxies to downstream services via TCP `ClientProxy`
-- Never contains business logic — it routes, guards, and forwards
+- Swagger UI available at `http://localhost:3000/api/v1/swagger`
+
+#### api-gateway internal architecture (3 layers — never skip)
+
+```
+Controller  → HTTP concerns only: routing, guards, decorators, delegate
+               - No ClientProxy, no firstValueFrom, no business logic
+               - Uses @TenantId() and @CurrentUser() decorators
+               - Max 3 lines per method body
+
+GatewayService → extends BaseGatewayService, calls send() for each operation
+               - Owns the TCP ClientProxy injection
+               - Maps DTO fields + tenantId into TCP payload
+               - One method per controller action
+
+BaseGatewayService → single send<T>(client, pattern, payload) implementation
+               - Applies 10s timeout via RxJS timeout() operator
+               - Maps RpcException / TimeoutError → HttpException
+               - All gateway services inherit this automatically
+```
+
+#### RpcExceptionFilter (global)
+Registered in `main.ts`. Catches any `RpcException` that escapes a gateway service
+and converts it to a proper HTTP JSON response with correct status code.
+
+#### DTOs (in apps/api-gateway/src/{module}/dto/)
+- **Request body DTOs** — validated with `class-validator`, documented with `@ApiProperty`
+- **Query DTOs** — extend `PaginationDto` for list endpoints, typed query params
+- Controllers use typed DTOs, never `body: any` or `query: any`
 
 ### auth-service (port 3001)
 - Issues and validates tokens
 - Manages refresh_tokens table
 - Calls users-service to create/find users (auth-service has NO users table)
-- All password hashing happens here (bcrypt, 12 rounds)
+- All password hashing happens here (bcryptjs, 12 rounds)
 
 ### tenants-service (port 3002)
 - Source of truth for all dealer accounts
@@ -282,11 +329,13 @@ CUSTOMER         ← registered buyer — can view own orders, wishlist
 ### Phase 1 — Core Platform (current focus)
 **Goal: a working dealership website end-to-end**
 
-Backend:
-- [ ] `yarn install` — install all workspace dependencies
-- [ ] Copy `.env.development` → `.env`, DB credentials already set for local Docker
-- [ ] `docker-compose up -d` — start SQL Server + Redis
-- [ ] Boot all services: `yarn dev:backend`
+Backend (complete ✓):
+- [x] All 11 services boot cleanly (`yarn dev:backend`)
+- [x] SQL Server auto-provisioned via `createDatabaseConfig` + docker-compose init service
+- [x] api-gateway layered architecture: Controller → GatewayService → BaseGatewayService
+- [x] Global RpcExceptionFilter — all RPC errors map to correct HTTP responses
+- [x] All request bodies and query params are typed DTOs with class-validator
+- [x] Swagger UI at `http://localhost:3000/api/v1/swagger`
 - [ ] Test auth flow: register → login → refresh → logout
 - [ ] Test tenant CRUD
 - [ ] Test vehicle CRUD (create, publish, search)
@@ -394,65 +443,80 @@ Frontend (`apps/dashboard`):
 # 1. Open project
 cd C:\Users\HP\Development\autonova
 
-# 2. Start infrastructure
-docker-compose up -d        # SQL Server on 1433, Redis on 6379
+# 2. Start infrastructure (SQL Server only — Redis added when needed)
+docker-compose up -d        # SQL Server on 1433; init service auto-creates autonova DB
 
-# 3. Copy env (choose your environment)
-cp .env.development .env    # dev: DB_PASSWORD + JWT secrets already set
-
-# 4. Install dependencies
+# 3. Install dependencies
 yarn install
 
-# 5. Start all backend services
-yarn dev:backend
+# 4. Start all backend services
+yarn dev:backend             # browser opens http://localhost:3000/api/v1/swagger automatically
 
-# 6. Start customer website (separate terminal)
+# 5. Start customer website (separate terminal)
 yarn dev:web
 
-# 7. Start dealer dashboard (separate terminal)
+# 6. Start dealer dashboard (separate terminal)
 yarn dev:dashboard
 ```
+
+**Notes:**
+- No need to copy `.env` — services load `.env.development` / `.env.staging` / `.env.production` directly based on `NODE_ENV`
+- The `autonova` database is created automatically on first boot (no manual SQL required)
+- Connect SSMS to `localhost,1433` (sa / YourStrong@Passw0rd) to inspect the database
 
 ### Service URLs (local)
 
 | Service | URL |
 |---------|-----|
 | API Gateway | http://localhost:3000/api/v1 |
+| Swagger UI | http://localhost:3000/api/v1/swagger |
 | Customer Website | http://localhost:3100 |
 | Dealer Dashboard | http://localhost:3101 |
 | Platform Admin | http://localhost:3102 |
 
-### First API calls to verify
+### Smoke test sequence (use Swagger UI)
 
-```bash
-# Register a dealer tenant
-POST http://localhost:3000/api/v1/tenants
-{ "name": "Fresh Autos World", "slug": "freshautosworld", "country": "NG",
-  "currency": "NGN", "locale": "en-NG", "email": "info@freshautosworld.com" }
-
-# Register a user for that tenant
-POST http://localhost:3000/api/v1/auth/register
-X-Tenant-ID: <tenantId from above>
-{ "email": "admin@freshautosworld.com", "password": "...",
-  "firstName": "Fresh", "lastName": "Admin" }
-
-# Login
-POST http://localhost:3000/api/v1/auth/login
-X-Tenant-ID: <tenantId>
-{ "email": "admin@freshautosworld.com", "password": "..." }
+```
+1. POST /api/v1/tenants              → create freshautosworld (no X-Tenant-ID needed)
+2. POST /api/v1/auth/register        → register DEALER_ADMIN (X-Tenant-ID = id from step 1)
+3. POST /api/v1/auth/login           → get accessToken + refreshToken
+4. Authorize in Swagger (Bearer token)
+5. POST /api/v1/vehicles             → add a vehicle
+6. GET  /api/v1/vehicles             → list inventory (public)
+7. POST /api/v1/leads                → submit enquiry (public, no auth)
+8. POST /api/v1/auth/refresh         → rotate tokens
+9. POST /api/v1/auth/logout          → revoke tokens
 ```
 
 ---
 
 ## 11. Code Conventions
 
+### General
 - **No comments unless the WHY is non-obvious** — names should explain the what
 - **No `any` types in shared packages** — use types from `@autonova/types`
-- **All TCP messages include `tenantId`** — enforce this at the gateway layer
-- **Services return plain objects, not HTTP exceptions** — use `RpcException` for errors
+- **Git commits follow conventional commits**: `feat:`, `fix:`, `chore:`, `docs:`
+
+### api-gateway rules (strict)
+- **Controllers contain zero logic** — 3 lines max per method: guards/decorators + delegate
+- **No `ClientProxy` in controllers** — lives in the gateway service only
+- **No `firstValueFrom` in controllers** — gateway service owns the TCP call
+- **No `@Req() req: any`** — use `@TenantId()` for tenant context, `@CurrentUser()` for user
+- **Every endpoint has `@ApiOperation` + `@ApiResponse`** — Swagger must be self-documenting
+- **Every body is a typed DTO** — never `@Body() body: any`
+- **Every query is a typed DTO** — extends `PaginationDto` for list endpoints
+
+### Microservice rules
+- **Services return plain objects, not HTTP exceptions** — use `RpcException({ message, statusCode })`
+- **All TypeORM queries include `where: { tenantId }`** — no exceptions
 - **Entity relations are by ID, not TypeORM joins** — services don't join across service boundaries
 - **Pagination is always `{ data, total, page, limit, totalPages }`** — use `PaginatedResponse<T>`
-- **Git commits follow conventional commits**: `feat:`, `fix:`, `chore:`, `docs:`
+
+### Database
+- **`createDatabaseConfig` is async** — connects to `master` first, auto-creates the target DB
+- **`synchronize: true` in dev only** — use migrations in staging/production
+- **All entities extend `BaseEntity`** — provides `id`, `tenantId`, `createdAt`, `updatedAt`
+- **Exception**: `Tenant` entity does not extend `BaseEntity` (has no tenantId)
 
 ---
 
@@ -464,7 +528,12 @@ See `.env.development` / `.env.staging` / `.env.production` for the full list wi
 |----------|---------|
 | `JWT_ACCESS_SECRET` | api-gateway (verify), auth-service (sign) |
 | `JWT_REFRESH_SECRET` | auth-service only |
-| `DB_*` | all services with TypeORM |
+| `DB_HOST` | all DB services (default: localhost) |
+| `DB_PORT` | all DB services (default: 1433) |
+| `DB_USERNAME` | all DB services (default: sa) |
+| `DB_PASSWORD` | all DB services |
+| `DB_DATABASE` | all DB services (default: autonova) |
+| `DB_INSTANCE` | all DB services — set to `SQLEXPRESS` for named instance, blank for Docker |
 | `STRIPE_SECRET_KEY` | payments-service |
 | `PAYSTACK_SECRET_KEY` | payments-service |
 | `CLOUDINARY_*` | media-service |
@@ -475,13 +544,18 @@ See `.env.development` / `.env.staging` / `.env.production` for the full list wi
 
 ## 13. Adding a New Service (checklist)
 
-1. Create `apps/<name>-service/` with: `package.json`, `tsconfig.json`,
-   `tsconfig.build.json`, `nest-cli.json`
-2. Add TCP port to `.env.example` and allocate the next available port
+**Microservice:**
+1. Create `apps/<name>-service/` with: `package.json`, `tsconfig.json`, `tsconfig.build.json`, `nest-cli.json`
+2. Add TCP port to `.env.development` / `.env.staging` / `.env.production`
 3. Add message patterns to `packages/types/src/message-patterns.ts`
 4. Add `SERVICES.<NAME>` constant to `packages/types/src/message-patterns.ts`
-5. Add entity types to appropriate file in `packages/types/src/`
-6. Register the client in api-gateway's relevant module
-7. Add proxy controller in api-gateway
-8. Update `turbo.json` if the service has unique build requirements
-9. Update this CLAUDE.md under Section 6 with the service's responsibilities
+5. Add payload interfaces to appropriate file in `packages/types/src/`
+6. Update `turbo.json` if the service has unique build requirements
+7. Update this CLAUDE.md under Section 6 with the service's responsibilities
+
+**api-gateway integration (follow the 3-layer pattern):**
+8. Create `apps/api-gateway/src/<name>/dto/` — request body DTOs + query DTOs
+9. Create `apps/api-gateway/src/<name>/<name>.gateway.service.ts` extending `BaseGatewayService`
+10. Create `apps/api-gateway/src/<name>/<name>.controller.ts` — delegates only, no logic
+11. Create `apps/api-gateway/src/<name>/<name>.module.ts` — registers `ClientsModule` + provides gateway service
+12. Import the new module in `apps/api-gateway/src/app.module.ts`

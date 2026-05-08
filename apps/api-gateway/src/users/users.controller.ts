@@ -1,55 +1,62 @@
-import { Body, Controller, Delete, Get, Inject, Param, Put, Query, Req, UseGuards } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
-import { SERVICES, USER_PATTERNS } from '@autonova/types';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { Body, Controller, Delete, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { JwtPayload } from '@autonova/types';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { TenantId } from '../common/decorators/tenant-id.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { UsersGatewayService } from './users.gateway.service';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 
-@Controller('users')
+@ApiTags('users')
+@ApiBearerAuth('JWT')
+@ApiHeader({ name: 'X-Tenant-ID', description: 'Tenant UUID', required: true })
 @UseGuards(JwtAuthGuard)
+@Controller('users')
 export class UsersController {
-  constructor(@Inject(SERVICES.USERS) private readonly usersClient: ClientProxy) {}
+  constructor(private readonly usersService: UsersGatewayService) {}
 
   @Get()
   @UseGuards(RolesGuard)
   @Roles('DEALER_ADMIN', 'PLATFORM_ADMIN')
-  findAll(@Query() query: any, @Req() req: any) {
-    return firstValueFrom(
-      this.usersClient.send(USER_PATTERNS.FIND_ALL, { ...query, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'List all users in the tenant' })
+  @ApiResponse({ status: 200, description: 'Paginated user list' })
+  findAll(@Query() query: UserQueryDto, @TenantId() tenantId: string) {
+    return this.usersService.findAll(query, tenantId);
   }
 
   @Get('me')
-  getMe(@CurrentUser() user: any, @Req() req: any) {
-    return firstValueFrom(
-      this.usersClient.send(USER_PATTERNS.FIND_BY_ID, { id: user.sub, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'Get the currently authenticated user' })
+  @ApiResponse({ status: 200, description: 'Current user profile' })
+  getMe(@CurrentUser() user: JwtPayload, @TenantId() tenantId: string) {
+    return this.usersService.findOne(user.sub, tenantId);
   }
 
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('DEALER_ADMIN', 'PLATFORM_ADMIN')
-  findOne(@Param('id') id: string, @Req() req: any) {
-    return firstValueFrom(
-      this.usersClient.send(USER_PATTERNS.FIND_BY_ID, { id, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'Get a user by ID' })
+  @ApiResponse({ status: 200, description: 'User record' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  findOne(@Param('id') id: string, @TenantId() tenantId: string) {
+    return this.usersService.findOne(id, tenantId);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: any, @Req() req: any) {
-    return firstValueFrom(
-      this.usersClient.send(USER_PATTERNS.UPDATE, { ...body, id, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'Update a user' })
+  @ApiResponse({ status: 200, description: 'Updated user' })
+  update(@Param('id') id: string, @Body() body: UpdateUserDto, @TenantId() tenantId: string) {
+    return this.usersService.update(id, body, tenantId);
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('DEALER_ADMIN', 'PLATFORM_ADMIN')
-  remove(@Param('id') id: string, @Req() req: any) {
-    return firstValueFrom(
-      this.usersClient.send(USER_PATTERNS.DELETE, { id, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'Delete a user' })
+  @ApiResponse({ status: 200, description: 'User deleted' })
+  remove(@Param('id') id: string, @TenantId() tenantId: string) {
+    return this.usersService.remove(id, tenantId);
   }
 }

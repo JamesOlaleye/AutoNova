@@ -1,61 +1,69 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
-import { SERVICES, VEHICLE_PATTERNS } from '@autonova/types';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
+import { TenantId } from '../common/decorators/tenant-id.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { VehiclesGatewayService } from './vehicles.gateway.service';
+import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { VehicleQueryDto } from './dto/vehicle-query.dto';
 
+@ApiTags('vehicles')
+@ApiHeader({ name: 'X-Tenant-ID', description: 'Tenant UUID', required: true })
 @Controller('vehicles')
 export class VehiclesController {
-  constructor(@Inject(SERVICES.VEHICLES) private readonly vehiclesClient: ClientProxy) {}
+  constructor(private readonly vehiclesService: VehiclesGatewayService) {}
 
-  /** Public: browse inventory */
   @Get()
-  findAll(@Query() query: any, @Req() req: any) {
-    return firstValueFrom(
-      this.vehiclesClient.send(VEHICLE_PATTERNS.FIND_ALL, { ...query, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'List vehicles — public' })
+  @ApiResponse({ status: 200, description: 'Paginated vehicle list' })
+  findAll(@Query() query: VehicleQueryDto, @TenantId() tenantId: string) {
+    return this.vehiclesService.findAll(query, tenantId);
   }
 
   @Get('search')
-  search(@Query() query: any, @Req() req: any) {
-    return firstValueFrom(
-      this.vehiclesClient.send(VEHICLE_PATTERNS.SEARCH, { ...query, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'Search vehicles with filters — public' })
+  @ApiResponse({ status: 200, description: 'Filtered paginated vehicles' })
+  search(@Query() query: VehicleQueryDto, @TenantId() tenantId: string) {
+    return this.vehiclesService.search(query, tenantId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Req() req: any) {
-    return firstValueFrom(
-      this.vehiclesClient.send(VEHICLE_PATTERNS.FIND_BY_ID, { id, tenantId: req.tenantId }),
-    );
+  @ApiOperation({ summary: 'Get a vehicle by ID — public' })
+  @ApiResponse({ status: 200, description: 'Vehicle detail' })
+  @ApiResponse({ status: 404, description: 'Vehicle not found' })
+  findOne(@Param('id') id: string, @TenantId() tenantId: string) {
+    return this.vehiclesService.findOne(id, tenantId);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('DEALER_ADMIN', 'SALES_AGENT', 'PLATFORM_ADMIN')
-  create(@Body() body: any, @Req() req: any) {
-    return firstValueFrom(
-      this.vehiclesClient.send(VEHICLE_PATTERNS.CREATE, { ...body, tenantId: req.tenantId }),
-    );
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Add a vehicle to inventory' })
+  @ApiResponse({ status: 201, description: 'Vehicle created' })
+  create(@Body() body: CreateVehicleDto, @TenantId() tenantId: string) {
+    return this.vehiclesService.create(body, tenantId);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('DEALER_ADMIN', 'SALES_AGENT', 'PLATFORM_ADMIN')
-  update(@Param('id') id: string, @Body() body: any, @Req() req: any) {
-    return firstValueFrom(
-      this.vehiclesClient.send(VEHICLE_PATTERNS.UPDATE, { ...body, id, tenantId: req.tenantId }),
-    );
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Update a vehicle' })
+  @ApiResponse({ status: 200, description: 'Updated vehicle' })
+  update(@Param('id') id: string, @Body() body: UpdateVehicleDto, @TenantId() tenantId: string) {
+    return this.vehiclesService.update(id, body, tenantId);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('DEALER_ADMIN', 'PLATFORM_ADMIN')
-  remove(@Param('id') id: string, @Req() req: any) {
-    return firstValueFrom(
-      this.vehiclesClient.send(VEHICLE_PATTERNS.DELETE, { id, tenantId: req.tenantId }),
-    );
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Remove a vehicle from inventory' })
+  @ApiResponse({ status: 200, description: 'Vehicle removed' })
+  remove(@Param('id') id: string, @TenantId() tenantId: string) {
+    return this.vehiclesService.remove(id, tenantId);
   }
 }
