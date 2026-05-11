@@ -3,6 +3,17 @@
 > Read this before touching any code. Every decision recorded here has a reason.
 > Owner: James (jamesfullstackdeveloper@gmail.com)
 
+### Where to find app-specific rules
+
+| App | CLAUDE.md location |
+|-----|--------------------|
+| API Gateway (`apps/api-gateway`) | [`apps/api-gateway/CLAUDE.md`](apps/api-gateway/CLAUDE.md) — 3-layer architecture, module inventory, DTO rules, guard usage, adding endpoints |
+| Dealer Dashboard (`apps/dashboard`) | [`apps/dashboard/CLAUDE.md`](apps/dashboard/CLAUDE.md) — routing, components, auth flow, state, design system |
+| Customer Storefront (`apps/web`) | [`apps/web/CLAUDE.md`](apps/web/CLAUDE.md) — SSR strategy, SEO, filtering, lead creation |
+| Platform Admin (`apps/admin`) | [`apps/admin/CLAUDE.md`](apps/admin/CLAUDE.md) — security rules, platform-wide ops |
+
+**This root file covers**: business model, microservice architecture, multi-tenancy, auth, service responsibilities, phases, backend code conventions, environment variables, and global frontend standards (Section 14).
+
 ---
 
 ## 1. What Is AutoNova
@@ -326,7 +337,7 @@ and converts it to a proper HTTP JSON response with correct status code.
 
 ## 7. Development Phases
 
-### Phase 1 — Core Platform (current focus)
+### Phase 1 — Core Platform (complete ✓)
 **Goal: a working dealership website end-to-end**
 
 Backend (complete ✓):
@@ -336,21 +347,28 @@ Backend (complete ✓):
 - [x] Global RpcExceptionFilter — all RPC errors map to correct HTTP responses
 - [x] All request bodies and query params are typed DTOs with class-validator
 - [x] Swagger UI at `http://localhost:3000/api/v1/swagger`
-- [ ] Test auth flow: register → login → refresh → logout
-- [ ] Test tenant CRUD
-- [ ] Test vehicle CRUD (create, publish, search)
-- [ ] Test lead creation (public inquiry form)
+- [x] Smoke tested: auth flow (register → login → refresh → logout)
+- [x] Smoke tested: tenant CRUD
+- [x] Smoke tested: vehicle CRUD (create, publish, search)
+- [x] Smoke tested: lead creation (public inquiry form)
 
-Frontend (`apps/web`):
-- [ ] Install Tailwind CSS + shadcn/ui in web + dashboard
-- [ ] Vehicle listing page (SSR, filters, pagination)
-- [ ] Vehicle detail page (photos, specs, inquiry form)
-- [ ] API client utility (fetch wrapper with tenant header + auth token)
+Frontend (`apps/dashboard`) — complete ✓:
+- [x] Tailwind CSS + design system configured
+- [x] Login page (httpOnly cookies, Server Actions)
+- [x] Dashboard home (KPI stats cards + recent activity)
+- [x] Inventory list + add vehicle form (Zod-validated)
+- [x] Leads list + inline status update with toast feedback
+- [x] Mobile-responsive (sidebar drawer, 44px touch targets, WCAG 2.1 AA)
+- [x] CLAUDE.md hierarchy: root + app-level files for all apps
 
-Frontend (`apps/dashboard`):
-- [ ] Login page (calls POST /auth/login)
-- [ ] Inventory list + add vehicle form
-- [ ] Leads list
+Frontend (`apps/web`) — complete ✓:
+- [x] Tailwind CSS + design tokens (match dashboard)
+- [x] API client utility (public fetch wrapper, ISR revalidation)
+- [x] Public layout — sticky navbar (mobile drawer) + footer
+- [x] Homepage — hero, features strip, featured vehicles, dealer CTA
+- [x] Vehicle listing page (SSR, filter bar, URL-based filters, pagination)
+- [x] Vehicle detail page (specs grid, JSON-LD, sticky enquiry sidebar, WhatsApp CTA)
+- [x] Enquiry Server Action → POST /leads (Zod-validated, no auth)
 
 **Deliverable: freshautosworld can sign up, add vehicles, customers can browse and submit enquiries**
 
@@ -364,6 +382,7 @@ Frontend (`apps/dashboard`):
 - [ ] Dashboard: lead detail + status update UI
 - [ ] Dashboard: test drive calendar
 - [ ] Dashboard: order/deal management UI
+- [ ] White-label storefront per tenant — fetch dealer name, logo, contact info from tenants-service and display on apps/web navbar, footer, page titles and about page instead of AutoNova branding
 
 ---
 
@@ -561,3 +580,105 @@ See `.env.development` / `.env.staging` / `.env.production` for the full list wi
 10. Create `apps/api-gateway/src/<name>/<name>.controller.ts` — delegates only, no logic
 11. Create `apps/api-gateway/src/<name>/<name>.module.ts` — registers `ClientsModule` + provides gateway service
 12. Import the new module in `apps/api-gateway/src/app.module.ts`
+
+---
+
+## 14. Frontend Standards (Non-Negotiable)
+
+AutoNova is sold internationally to real businesses. Every screen must meet the standard
+of a commercial SaaS product (think: Linear, Vercel, Stripe Dashboard). These rules apply
+to **every** component and page in `apps/dashboard`, `apps/web`, and `apps/admin`.
+
+### Responsive Design — Mobile-First, Always
+
+- **Default to mobile layout**, then enhance for larger screens with `sm:`, `md:`, `lg:`, `xl:` prefixes
+- Every page must be **fully usable on 320px width** (smallest common phone) up to 2560px (wide monitor)
+- **Breakpoints** (Tailwind defaults — do not deviate):
+  - `sm` = 640px (landscape phone)
+  - `md` = 768px (tablet)
+  - `lg` = 1024px (laptop — sidebar shows on dashboard)
+  - `xl` = 1280px (desktop)
+  - `2xl` = 1536px (wide monitor)
+- **Dashboard sidebar**: hidden on mobile (< `lg`), visible as fixed sidebar on `lg+`. On mobile, opens as a slide-in drawer overlay controlled by a hamburger button in the header. Never block the main content on any screen size.
+- **Grid columns**: use `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` patterns — never assume two columns will fit on a phone
+- **Touch targets**: minimum 44×44px for all interactive elements (buttons, links, form inputs) — this is WCAG 2.5.5 and Apple HIG requirement
+- **Tables / lists**: on mobile, stack columns vertically or allow horizontal scroll with `overflow-x-auto` — never let content overflow the viewport
+- **Forms**: single-column on mobile, multi-column only on `sm+` — inputs must be full-width on small screens
+- **Typography scale**: body text minimum `text-sm` (14px) — never go below 12px for non-decorative text
+- **No horizontal scroll** on the page level — if content is wide, wrap or scroll within a container
+
+### Accessibility (WCAG 2.1 AA — Mandatory)
+
+- **Semantic HTML first**: use `<nav>`, `<main>`, `<header>`, `<aside>`, `<section>`, `<article>`, `<button>`, `<a>` correctly. Never use `<div>` as a button.
+- **Focus management**: every interactive element must be reachable and operable with keyboard alone. Tab order must be logical.
+- **Focus ring**: all focusable elements must have a visible focus ring — never `outline: none` without an alternative. Use the `focus-ring` utility class.
+- **Color contrast**: text must meet AA contrast ratios — 4.5:1 for normal text, 3:1 for large text. Never use muted-foreground text on muted backgrounds for important information.
+- **ARIA labels**: icon-only buttons MUST have `aria-label`. Decorative images use `alt=""`. Meaningful images have descriptive `alt` text.
+- **`role` attributes**: use `role="alert"` for error messages, `role="status"` for success notifications, `role="dialog"` for modals.
+- **Screen reader announcements**: use `aria-live="polite"` for dynamic content updates (toast notifications, status changes). Use `aria-live="assertive"` only for critical errors.
+- **`sr-only` class**: use for text that should be read by screen readers but not visible (e.g., icon button labels, skip links).
+- **Skip navigation link**: `apps/web` must have a "Skip to main content" link as the first focusable element.
+- **Form labels**: every `<input>`, `<select>`, `<textarea>` MUST have an associated `<label>` (use `htmlFor` / `id` pairing or wrap in `<label>`). Never rely on `placeholder` as the label.
+- **Error messages**: form errors must be programmatically associated with their input using `aria-describedby`.
+- **Loading states**: use `aria-busy="true"` on containers while loading, or replace with skeleton UI.
+- **Modal / dialog**: when opened, focus must move inside. `Escape` must close it. Focus must return to the trigger on close.
+
+### Visual Design Quality — International Commercial Standard
+
+- **Design tokens only**: never hardcode hex colors. Use only CSS variables (`text-foreground`, `bg-card`, `text-muted-foreground`, etc.) from the design system.
+- **Spacing system**: use only Tailwind spacing scale (multiples of 4px). Never use `px-3.5` for layout spacing — reserve odd values for fine-tuning small components.
+- **Typography hierarchy**: every page has exactly one `<h1>`. Section headings use `<h2>`. Sub-sections use `<h3>`. Never skip heading levels.
+- **No orphaned elements**: every page must have a clear information hierarchy — title → description → content → actions. Never dump content without context.
+- **Skeleton loaders, not spinners**: use animated skeleton placeholders for loading states. Full-page spinners are only acceptable for authentication redirects.
+- **Empty states are content**: every empty list/table must have an icon, a title, a helpful description, and a primary action (e.g., "Add first vehicle"). Never show a blank area.
+- **Consistent border radius**: use `rounded-xl` for cards/panels, `rounded-lg` for buttons/inputs, `rounded-full` for avatars/badges. Do not mix arbitrarily.
+- **Shadows with purpose**: `shadow-sm` for cards at rest, `shadow-md` on hover/active, `shadow-lg` for dropdowns/modals, `shadow-xl` for dialogs. Never use shadows decoratively.
+- **Icon consistency**: all icons from `lucide-react` only. Size: `h-4 w-4` for inline/button icons, `h-5 w-5` for nav items, `h-6 w-6` for feature icons, `h-8 w-8` for empty state icons. Never mix icon libraries.
+- **Animation with restraint**: use subtle transitions (`transition-colors`, `transition-shadow`, `transition-transform`) for hover/active states. Avoid layout-shifting animations. Respect `prefers-reduced-motion`.
+- **Images**: all `<img>` tags must have explicit `width` and `height` to prevent Cumulative Layout Shift (CLS). Use Next.js `<Image>` component for all images in Next.js apps.
+- **Loading performance**: lazy-load images below the fold. Import heavy third-party components dynamically with `next/dynamic`.
+
+### Component Architecture Rules (Frontend)
+
+```
+components/
+  ui/          ← Atoms: Button, Input, Badge, Card, Label, Select, Textarea
+               ← No business logic. Pure styling primitives only.
+               ← Never import from app/ or lib/api/
+
+  common/      ← Molecules: StatsCard, PageHeader, EmptyState, Toaster, Pagination
+               ← Composed from ui/ atoms + minor logic (e.g., toast auto-dismiss)
+               ← Never import from specific features (inventory/, leads/)
+
+  layout/      ← Organisms: Sidebar, Header
+               ← May read from stores. No API calls.
+
+  features/    ← Feature-specific components (e.g., VehicleCard, LeadRow)
+               ← Knows about domain types. May receive server-fetched data as props.
+```
+
+- **Server Components by default** — only add `'use client'` when you need hooks, event handlers, or browser APIs
+- **Data fetching in Server Components** — never fetch data in `useEffect`. Use Server Components or Server Actions.
+- **No prop drilling beyond 2 levels** — use Zustand store or React context for deeper state
+- **Every interactive element that mutates data** uses a Server Action, not a client-side fetch
+- **URL as state for filters/pagination** — use `useSearchParams` + `router.push` for filter state so URLs are shareable and back-button works
+
+### Performance Standards
+
+- **Core Web Vitals targets** (measured in production):
+  - LCP (Largest Contentful Paint) < 2.5s
+  - FID / INP (Interaction to Next Paint) < 200ms
+  - CLS (Cumulative Layout Shift) < 0.1
+- **Font loading**: use `display: 'swap'` for Google Fonts. Subset to `latin` only unless a market requires extended characters.
+- **Image formats**: WebP preferred. Use Next.js `<Image>` with `priority` on above-the-fold images.
+- **Bundle size**: dynamic import heavy components (date pickers, rich text editors, charts). Keep the initial bundle under 200KB gzipped.
+- **No layout shift from async data**: reserve space with skeleton loaders before data arrives.
+
+### Internationalisation (i18n) Preparation
+
+AutoNova serves Nigeria, UK, and will expand globally. Even before full i18n is implemented:
+- **Never hardcode currency symbols** — always use `formatCurrency(amount, currency)` from `@/lib/utils`
+- **Never hardcode date formats** — always use `formatDate(date)` from `@/lib/utils`
+- **Never hardcode measurement units** — always use `formatMileage(value, unit)` from `@/lib/utils`
+- **All user-facing strings in English** for now, but written so they can be extracted into i18n keys later (no string interpolation that breaks translation — use template variables)
+- **RTL readiness**: do not use `left`/`right` CSS properties directly — prefer `start`/`end` or Tailwind's `ps-`/`pe-` logical properties where future RTL support is needed
