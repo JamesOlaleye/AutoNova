@@ -32,6 +32,20 @@ export interface UpdateVehiclePayload extends Partial<CreateVehiclePayload> {
   tenantId: string;
 }
 
+export interface AddVehicleImagePayload {
+  id: string;
+  tenantId: string;
+  url: string;
+  publicId: string;
+}
+
+export interface RemoveVehicleImagePayload {
+  id: string;
+  tenantId: string;
+  url: string;
+  publicId: string;
+}
+
 export interface VehicleSearchPayload {
   tenantId: string;
   make?: string;

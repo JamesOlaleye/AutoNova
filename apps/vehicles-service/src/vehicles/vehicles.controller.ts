@@ -6,6 +6,8 @@ import {
   CreateVehiclePayload,
   UpdateVehiclePayload,
   VehicleSearchPayload,
+  AddVehicleImagePayload,
+  RemoveVehicleImagePayload,
 } from '@autonova/types';
 
 @Controller()
@@ -40,5 +42,15 @@ export class VehiclesController {
   @MessagePattern(VEHICLE_PATTERNS.DELETE)
   remove(@Payload() payload: { id: string; tenantId: string }) {
     return this.vehiclesService.remove(payload.id, payload.tenantId);
+  }
+
+  @MessagePattern(VEHICLE_PATTERNS.ADD_IMAGE)
+  addImage(@Payload() payload: AddVehicleImagePayload) {
+    return this.vehiclesService.addImage(payload);
+  }
+
+  @MessagePattern(VEHICLE_PATTERNS.REMOVE_IMAGE)
+  removeImage(@Payload() payload: RemoveVehicleImagePayload) {
+    return this.vehiclesService.removeImage(payload);
   }
 }

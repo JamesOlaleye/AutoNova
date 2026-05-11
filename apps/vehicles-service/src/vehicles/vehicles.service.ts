@@ -7,6 +7,8 @@ import {
   CreateVehiclePayload,
   UpdateVehiclePayload,
   VehicleSearchPayload,
+  AddVehicleImagePayload,
+  RemoveVehicleImagePayload,
   PaginatedResponse,
 } from '@autonova/types';
 
@@ -110,5 +112,25 @@ export class VehiclesService {
     await this.findById(id, tenantId);
     await this.vehicleRepository.update({ id, tenantId }, { status: 'DRAFT' });
     return { message: 'Vehicle removed successfully' };
+  }
+
+  async addImage(payload: AddVehicleImagePayload): Promise<Vehicle> {
+    const vehicle = await this.findById(payload.id, payload.tenantId);
+    const current = vehicle.images ?? [];
+    await this.vehicleRepository.update(
+      { id: payload.id, tenantId: payload.tenantId },
+      { images: [...current, payload.url] },
+    );
+    return this.findById(payload.id, payload.tenantId);
+  }
+
+  async removeImage(payload: RemoveVehicleImagePayload): Promise<Vehicle> {
+    const vehicle = await this.findById(payload.id, payload.tenantId);
+    const updated = (vehicle.images ?? []).filter((url) => url !== payload.url);
+    await this.vehicleRepository.update(
+      { id: payload.id, tenantId: payload.tenantId },
+      { images: updated },
+    );
+    return this.findById(payload.id, payload.tenantId);
   }
 }

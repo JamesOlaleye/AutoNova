@@ -303,6 +303,9 @@ and converts it to a proper HTTP JSON response with correct status code.
 - CRM pipeline: NEW → CONTACTED → QUALIFIED → LOST → CONVERTED
 - Assigning leads to staff agents
 - Linked to optional vehicleId and customerId
+- After `create()`: emits `NOTIFY_NEW_LEAD` fire-and-forget to notifications-service
+- After `update()` when `assignedTo` changes to a **new** user: emits `NOTIFY_LEAD_ASSIGNED` fire-and-forget
+  - Comparison is always made against the previous value — SMS only fires on a genuine reassignment, not on every update
 
 ### orders-service (port 3006)
 - Represents a committed deal
@@ -311,16 +314,37 @@ and converts it to a proper HTTP JSON response with correct status code.
 - Sets `closedAt` automatically when status reaches COMPLETED or CANCELLED
 
 ### notifications-service (port 3007)
-- Email via Resend, SMS via Twilio, WhatsApp via Twilio WhatsApp API
-- Stateless — just sends, does not store sent history yet
-- Called fire-and-forget from other services (emit not send where possible)
-- Integration TODO: wire up Resend + Twilio in Phase 2
+- Email via Resend, SMS + WhatsApp via Twilio
+- Stateless — sends notifications, does not store sent history
+- Credentials in `.env.development` — uses placeholder detection; gracefully skips if placeholders are present (never crashes)
+
+**Notification triggers (Phase 2):**
+
+| Event | Who gets notified | Channel |
+|-------|-------------------|---------|
+| New enquiry created | Dealer (tenant email) | Email |
+| New enquiry created | Customer (lead email) | Email (confirmation) |
+| New enquiry created | Dealer (tenant phone) | SMS (if phone on file) |
+| Lead assigned to agent | Assigned sales agent | SMS (if agent has phone) |
+
+**Critical architectural rule — `emit` vs `send`:**
+- `client.emit()` → **fire-and-forget** → must be handled by `@EventPattern()` in the receiving service
+- `client.send()` → **request-response** → must be handled by `@MessagePattern()` in the receiving service
+- Notification triggers (`NOTIFY_NEW_LEAD`, `NOTIFY_LEAD_ASSIGNED`) use `emit` + `@EventPattern` — never block the caller
+- Direct notification calls (`SEND_EMAIL`, `SEND_SMS`, `SEND_WHATSAPP`) use `send` + `@MessagePattern` — caller can await the result
+
+**Why Resend for email:** Developer-first API, generous free tier (3,000/mo), React Email support for future template upgrades, strong deliverability. Needs a verified domain (`freshautosworld.com`) for production sends.
+
+**Why Twilio for SMS/WhatsApp:** Covers Nigeria (+234) and UK (+44) in one integration. Official WhatsApp Business API partner — the only programmatic route to WhatsApp. SMS is preferred over email for time-sensitive dealer alerts.
 
 ### media-service (port 3008)
-- Handles vehicle image upload/delete via Cloudinary
-- Stores images under `autonova/{tenantId}/vehicles/`
-- Returns Cloudinary URLs stored in vehicles-service
-- Integration TODO: implement actual Cloudinary upload in Phase 1
+- Handles vehicle image upload/delete via Cloudinary (wired in Phase 2)
+- Stores images under `autonova/{tenantId}/vehicles/` on Cloudinary
+- Auto-transforms on upload: max 1200×800, quality auto, WebP format
+- Returns `{ url, publicId }` — URL stored in vehicles-service `images` array
+- Credentials in `.env.development` — detects placeholders and skips gracefully
+- Exposed via api-gateway: `POST /vehicles/:id/images`, `DELETE /vehicles/:id/images`
+- vehicles-service has `addImage` / `removeImage` methods that manage the `images[]` array
 
 ### analytics-service (port 3009)
 - Deferred to Phase 4
@@ -375,13 +399,18 @@ Frontend (`apps/web`) — complete ✓:
 ---
 
 ### Phase 2 — CRM & Notifications
-- [ ] Wire Resend (email) + Twilio (SMS) in notifications-service
-- [ ] Email on new lead (to dealer), confirmation (to customer)
-- [ ] SMS alerts to assigned sales agent
-- [ ] Implement Cloudinary upload in media-service
+- [x] Wire Resend (email) + Twilio (SMS/WhatsApp) in notifications-service
+- [x] Email to dealer on new enquiry + confirmation email to customer
+- [x] SMS alert to dealer on new enquiry (if tenant has phone on file)
+- [x] SMS alert to assigned sales agent when a lead is assigned to them
+- [ ] Replace placeholder API keys with real Resend + Twilio credentials in .env.development
+- [x] Implement Cloudinary upload in media-service — POST /vehicles/:id/images + DELETE /vehicles/:id/images
+- [ ] Replace placeholder Cloudinary credentials in .env.development
 - [ ] Dashboard: lead detail + status update UI
+- [ ] Dashboard: vehicle image upload UI (backend ready — needs upload field in add-vehicle form)
 - [ ] Dashboard: test drive calendar
 - [ ] Dashboard: order/deal management UI
+- [ ] Dashboard: staff management UI (invite staff, assign roles, remove team members)
 - [ ] White-label storefront per tenant — fetch dealer name, logo, contact info from tenants-service and display on apps/web navbar, footer, page titles and about page instead of AutoNova branding
 
 ---

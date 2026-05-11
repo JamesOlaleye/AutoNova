@@ -13,6 +13,25 @@ export interface CreateLeadPayload {
   scheduledAt?: Date;
 }
 
+export interface NotifyLeadAssignedPayload {
+  tenantId: string;
+  leadId: string;
+  assignedToUserId: string;
+  customerName: string;
+  enquiryType: LeadType;
+}
+
+export interface NotifyNewLeadPayload {
+  tenantId: string;
+  leadId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  enquiryType: LeadType;
+  message?: string;
+  vehicleId?: string;
+}
+
 export interface UpdateLeadPayload {
   id: string;
   tenantId: string;

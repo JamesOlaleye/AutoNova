@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
@@ -65,5 +65,34 @@ export class VehiclesController {
   @ApiResponse({ status: 200, description: 'Vehicle removed' })
   remove(@Param('id') id: string, @TenantId() tenantId: string) {
     return this.vehiclesService.remove(id, tenantId);
+  }
+
+  @Post(':id/images')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('DEALER_ADMIN', 'SALES_AGENT', 'PLATFORM_ADMIN')
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Upload a vehicle image' })
+  @ApiResponse({ status: 201, description: 'Image uploaded — returns updated vehicle' })
+  uploadImage(
+    @Param('id') id: string,
+    @Body() body: { base64: string },
+    @TenantId() tenantId: string,
+  ) {
+    return this.vehiclesService.uploadImage(id, tenantId, body.base64);
+  }
+
+  @Delete(':id/images')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('DEALER_ADMIN', 'SALES_AGENT', 'PLATFORM_ADMIN')
+  @ApiBearerAuth('JWT')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a vehicle image' })
+  @ApiResponse({ status: 200, description: 'Image deleted — returns updated vehicle' })
+  deleteImage(
+    @Param('id') id: string,
+    @Body() body: { publicId: string; url: string },
+    @TenantId() tenantId: string,
+  ) {
+    return this.vehiclesService.deleteImage(id, tenantId, body.publicId, body.url);
   }
 }

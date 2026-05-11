@@ -15,6 +15,14 @@ import { VehiclesGatewayService } from './vehicles.gateway.service';
           port: parseInt(process.env.VEHICLES_SERVICE_PORT || '3004'),
         },
       },
+      {
+        name: SERVICES.MEDIA,
+        transport: Transport.TCP,
+        options: {
+          host: process.env.MEDIA_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.MEDIA_SERVICE_PORT || '3008'),
+        },
+      },
     ]),
   ],
   controllers: [VehiclesController],

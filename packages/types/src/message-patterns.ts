@@ -43,6 +43,8 @@ export const VEHICLE_PATTERNS = {
   UPDATE: 'vehicles.update',
   DELETE: 'vehicles.delete',
   SEARCH: 'vehicles.search',
+  ADD_IMAGE: 'vehicles.addImage',
+  REMOVE_IMAGE: 'vehicles.removeImage',
 } as const;
 
 export const LEAD_PATTERNS = {
@@ -64,6 +66,8 @@ export const NOTIFICATION_PATTERNS = {
   SEND_EMAIL: 'notifications.sendEmail',
   SEND_SMS: 'notifications.sendSms',
   SEND_WHATSAPP: 'notifications.sendWhatsapp',
+  NOTIFY_NEW_LEAD: 'notifications.notifyNewLead',
+  NOTIFY_LEAD_ASSIGNED: 'notifications.notifyLeadAssigned',
 } as const;
 
 export const MEDIA_PATTERNS = {
