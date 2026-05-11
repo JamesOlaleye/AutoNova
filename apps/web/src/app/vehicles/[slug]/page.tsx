@@ -129,7 +129,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                 {/* Thumbnails */}
                 {vehicle.images.length > 1 && (
                   <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                    {vehicle.images.slice(1, 5).map((url, i) => (
+                    {vehicle.images.slice(1, 19).map((url, i) => (
                       <div key={url} className="relative aspect-video overflow-hidden rounded-lg bg-muted">
                         <Image
                           src={url}
@@ -141,10 +141,10 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                         />
                       </div>
                     ))}
-                    {vehicle.images.length > 5 && (
+                    {vehicle.images.length > 19 && (
                       <div className="relative aspect-video overflow-hidden rounded-lg bg-muted flex items-center justify-center">
                         <span className="text-xs font-semibold text-muted-foreground">
-                          +{vehicle.images.length - 5} more
+                          +{vehicle.images.length - 19} more
                         </span>
                       </div>
                     )}

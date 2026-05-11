@@ -109,7 +109,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                 Photos
               </h2>
               <span className="ml-auto text-xs text-muted-foreground">
-                {vehicle.images?.length ?? 0} {(vehicle.images?.length ?? 0) === 1 ? 'photo' : 'photos'}
+                {vehicle.images?.length ?? 0} / 20 photos
               </span>
             </div>
             <VehicleImageUpload

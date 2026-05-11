@@ -33,9 +33,16 @@ export class AuthService {
       parseInt(process.env.BCRYPT_ROUNDS || '12'),
     );
 
-    const user = await firstValueFrom(
-      this.usersClient.send(USER_PATTERNS.CREATE, { ...payload, password: hashedPassword }),
-    );
+    let user: any;
+    try {
+      user = await firstValueFrom(
+        this.usersClient.send(USER_PATTERNS.CREATE, { ...payload, password: hashedPassword }),
+      );
+    } catch (err: any) {
+      const statusCode = err?.error?.statusCode ?? err?.statusCode ?? 500;
+      const message = err?.error?.message ?? err?.message ?? 'Registration failed';
+      throw new RpcException({ message, statusCode });
+    }
 
     if (!user || user.error) {
       throw new RpcException(user?.error || 'Registration failed');
@@ -51,12 +58,22 @@ export class AuthService {
   }
 
   async login(payload: LoginPayload): Promise<AuthResponse> {
-    const user = await firstValueFrom(
-      this.usersClient.send(USER_PATTERNS.FIND_BY_EMAIL, {
-        email: payload.email,
-        tenantId: payload.tenantId,
-      }),
-    );
+    let user: any;
+    try {
+      user = await firstValueFrom(
+        this.usersClient.send(USER_PATTERNS.FIND_BY_EMAIL, {
+          email: payload.email,
+          tenantId: payload.tenantId,
+        }),
+      );
+    } catch (err: any) {
+      const statusCode = err?.error?.statusCode ?? err?.statusCode ?? 500;
+      const message = err?.error?.message ?? err?.message ?? 'Unknown error reaching users-service';
+      if (statusCode === 404 || statusCode === 401) {
+        throw new RpcException({ message: 'Invalid credentials', statusCode: 401 });
+      }
+      throw new RpcException({ message: `Login failed: ${message}`, statusCode });
+    }
 
     if (!user || user.error) {
       throw new RpcException({ message: 'Invalid credentials', statusCode: 401 });
@@ -72,7 +89,11 @@ export class AuthService {
     }
 
     const tokens = this.generateTokens(user.id, user.email, user.role, payload.tenantId);
-    await this.rotateRefreshToken(user.id, payload.tenantId, tokens.refreshToken);
+    try {
+      await this.rotateRefreshToken(user.id, payload.tenantId, tokens.refreshToken);
+    } catch (err: any) {
+      throw new RpcException({ message: `Token save failed: ${err?.message ?? err}`, statusCode: 500 });
+    }
 
     return {
       ...tokens,

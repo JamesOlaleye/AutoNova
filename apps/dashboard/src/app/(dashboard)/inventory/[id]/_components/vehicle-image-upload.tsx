@@ -15,6 +15,7 @@ interface VehicleImageUploadProps {
 }
 
 const MAX_FILE_SIZE_MB = 5;
+const MAX_IMAGES = 20;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 function extractPublicId(url: string): string {
@@ -49,6 +50,10 @@ export function VehicleImageUpload({ vehicleId, images }: VehicleImageUploadProp
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
+    if (images.length >= MAX_IMAGES) {
+      setUploadError(`Maximum ${MAX_IMAGES} photos per vehicle.`);
+      return;
+    }
     setUploadError(null);
 
     const file = files[0];
@@ -140,61 +145,69 @@ export function VehicleImageUpload({ vehicleId, images }: VehicleImageUploadProp
       )}
 
       {/* Upload area */}
-      <div
-        className={cn(
-          'relative rounded-xl border-2 border-dashed p-6 text-center transition-colors',
-          isDragging
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/30',
-          isPending && 'pointer-events-none opacity-60',
-        )}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setIsDragging(false);
-          handleFiles(e.dataTransfer.files);
-        }}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPTED_TYPES.join(',')}
-          className="sr-only"
-          onChange={(e) => handleFiles(e.target.files)}
-          aria-label="Upload vehicle image"
-        />
-
-        <div className="flex flex-col items-center gap-2">
-          {isPending ? (
-            <>
-              <span className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <p className="text-sm font-medium text-muted-foreground">Uploading…</p>
-            </>
-          ) : (
-            <>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Upload className="h-5 w-5 text-primary" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Drop an image here or{' '}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-primary underline underline-offset-2 hover:no-underline"
-                  >
-                    browse
-                  </button>
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  JPG, PNG, WebP · Max {MAX_FILE_SIZE_MB}MB per image
-                </p>
-              </div>
-            </>
+      {images.length < MAX_IMAGES ? (
+        <div
+          className={cn(
+            'relative rounded-xl border-2 border-dashed p-6 text-center transition-colors',
+            isDragging
+              ? 'border-primary bg-primary/5'
+              : 'border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/30',
+            isPending && 'pointer-events-none opacity-60',
           )}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            handleFiles(e.dataTransfer.files);
+          }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES.join(',')}
+            className="sr-only"
+            onChange={(e) => handleFiles(e.target.files)}
+            aria-label="Upload vehicle image"
+          />
+
+          <div className="flex flex-col items-center gap-2">
+            {isPending ? (
+              <>
+                <span className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-sm font-medium text-muted-foreground">Uploading…</p>
+              </>
+            ) : (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Upload className="h-5 w-5 text-primary" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Drop an image here or{' '}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-primary underline underline-offset-2 hover:no-underline"
+                    >
+                      browse
+                    </button>
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    JPG, PNG, WebP · Max {MAX_FILE_SIZE_MB}MB · {images.length} / {MAX_IMAGES} photos
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <span className="text-sm font-medium text-emerald-700">
+            {MAX_IMAGES} / {MAX_IMAGES} photos uploaded — maximum reached
+          </span>
+        </div>
+      )}
 
       {/* Error */}
       {uploadError && (
@@ -204,7 +217,7 @@ export function VehicleImageUpload({ vehicleId, images }: VehicleImageUploadProp
         </div>
       )}
 
-      {images.length > 0 && (
+      {images.length > 0 && images.length < MAX_IMAGES && (
         <Button
           type="button"
           variant="outline"

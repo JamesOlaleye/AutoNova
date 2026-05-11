@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
+import { getTenant } from '@/lib/api/tenants';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { StoreProvider } from '@/store/store-provider';
@@ -13,6 +14,14 @@ export default async function DashboardLayout({
   const session = await getSession();
   if (!session) redirect('/login');
 
+  let dealerName: string | null = null;
+  try {
+    const tenant = await getTenant(session.tenantId, session.token);
+    dealerName = tenant.name;
+  } catch {
+    // Graceful degradation — sidebar still renders without the name
+  }
+
   return (
     <StoreProvider user={session.user} tenantId={session.tenantId}>
       {/* Skip to main content — required for screen readers */}
@@ -24,7 +33,7 @@ export default async function DashboardLayout({
       </a>
 
       <div className="flex h-dvh overflow-hidden bg-background">
-        <Sidebar />
+        <Sidebar dealerName={dealerName} />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <Header />
           <main

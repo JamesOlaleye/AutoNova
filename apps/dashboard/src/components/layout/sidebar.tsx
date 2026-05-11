@@ -8,14 +8,14 @@ import { navigation } from '@/config/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { useUiStore } from '@/store/ui.store';
 
-function SidebarContent({ onClose }: { onClose?: () => void }) {
+function SidebarContent({ onClose, dealerName }: { onClose?: () => void; dealerName?: string | null }) {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
 
   return (
     <div className="flex h-full flex-col">
-      {/* Brand */}
-      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
+      {/* Platform brand */}
+      <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-sm">
             <Car className="h-4 w-4 text-white" aria-hidden="true" />
@@ -36,6 +36,18 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           </button>
         )}
       </div>
+
+      {/* Dealer workspace */}
+      {dealerName && (
+        <div className="border-b border-sidebar-border px-5 py-3">
+          <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30">
+            Active Workspace
+          </p>
+          <p className="font-[family-name:var(--font-serif)] text-[15px] font-semibold italic leading-snug text-sidebar-foreground/90 tracking-wide">
+            {dealerName}
+          </p>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3" aria-label="Main navigation">
@@ -126,7 +138,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ dealerName }: { dealerName?: string | null }) {
   const mobileNavOpen = useUiStore((s) => s.mobileNavOpen);
   const setMobileNavOpen = useUiStore((s) => s.setMobileNavOpen);
 
@@ -137,7 +149,7 @@ export function Sidebar() {
         className="hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex"
         aria-label="Sidebar"
       >
-        <SidebarContent />
+        <SidebarContent dealerName={dealerName} />
       </aside>
 
       {/* Mobile drawer overlay */}
@@ -156,7 +168,7 @@ export function Sidebar() {
             aria-modal="true"
             role="dialog"
           >
-            <SidebarContent onClose={() => setMobileNavOpen(false)} />
+            <SidebarContent dealerName={dealerName} onClose={() => setMobileNavOpen(false)} />
           </aside>
         </>
       )}
