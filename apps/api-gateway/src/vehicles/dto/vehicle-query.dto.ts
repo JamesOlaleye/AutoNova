@@ -55,6 +55,14 @@ export class VehicleQueryDto extends PaginationDto {
   @IsEnum(['PETROL', 'DIESEL', 'HYBRID', 'ELECTRIC', 'LPG', 'CNG'])
   fuelType?: string;
 
+  @ApiPropertyOptional({
+    enum: ['SEDAN', 'SUV', 'HATCHBACK', 'COUPE', 'CONVERTIBLE', 'WAGON', 'PICKUP', 'VAN', 'MPV', 'CROSSOVER', 'SPORTS'],
+    description: 'Filter by body type',
+  })
+  @IsOptional()
+  @IsEnum(['SEDAN', 'SUV', 'HATCHBACK', 'COUPE', 'CONVERTIBLE', 'WAGON', 'PICKUP', 'VAN', 'MPV', 'CROSSOVER', 'SPORTS'])
+  bodyType?: string;
+
   @ApiPropertyOptional({ enum: ['DRAFT', 'AVAILABLE', 'RESERVED', 'SOLD'], default: 'AVAILABLE' })
   @IsOptional()
   @IsEnum(['DRAFT', 'AVAILABLE', 'RESERVED', 'SOLD'])

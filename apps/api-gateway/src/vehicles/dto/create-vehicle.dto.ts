@@ -65,6 +65,14 @@ export class CreateVehicleDto {
   @IsString()
   engineSize?: string;
 
+  @ApiPropertyOptional({
+    enum: ['SEDAN', 'SUV', 'HATCHBACK', 'COUPE', 'CONVERTIBLE', 'WAGON', 'PICKUP', 'VAN', 'MPV', 'CROSSOVER', 'SPORTS'],
+    description: 'Vehicle body type / style',
+  })
+  @IsOptional()
+  @IsEnum(['SEDAN', 'SUV', 'HATCHBACK', 'COUPE', 'CONVERTIBLE', 'WAGON', 'PICKUP', 'VAN', 'MPV', 'CROSSOVER', 'SPORTS'])
+  bodyType?: string;
+
   @ApiPropertyOptional({ description: 'Detailed vehicle description for the listing' })
   @IsOptional()
   @IsString()

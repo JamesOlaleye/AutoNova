@@ -4,6 +4,9 @@ export type Transmission = 'AUTOMATIC' | 'MANUAL' | 'SEMI_AUTOMATIC';
 export type FuelType = 'PETROL' | 'DIESEL' | 'HYBRID' | 'ELECTRIC' | 'LPG' | 'CNG';
 export type DriveType = 'RHD' | 'LHD';
 export type MileageUnit = 'KM' | 'MILES';
+export type BodyType =
+  | 'SEDAN' | 'SUV' | 'HATCHBACK' | 'COUPE' | 'CONVERTIBLE'
+  | 'WAGON' | 'PICKUP' | 'VAN' | 'MPV' | 'CROSSOVER' | 'SPORTS';
 
 export interface Vehicle {
   id: string;
@@ -19,6 +22,7 @@ export interface Vehicle {
   transmission: Transmission;
   fuelType: FuelType;
   driveType: DriveType;
+  bodyType: BodyType | null;
   color: string;
   vin: string | null;
   engineSize: string | null;
@@ -42,6 +46,7 @@ export interface CreateVehicleInput {
   transmission: Transmission;
   fuelType: FuelType;
   driveType: DriveType;
+  bodyType?: BodyType;
   color: string;
   vin?: string;
   engineSize?: string;

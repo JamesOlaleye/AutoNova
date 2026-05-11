@@ -66,6 +66,7 @@ export class VehiclesService {
       condition,
       transmission,
       fuelType,
+      bodyType,
       status,
       page = 1,
       limit = 20,
@@ -78,6 +79,7 @@ export class VehiclesService {
     if (condition) where.condition = condition;
     if (transmission) where.transmission = transmission;
     if (fuelType) where.fuelType = fuelType;
+    if (bodyType) where.bodyType = bodyType;
     if (status) where.status = status;
     if (yearMin !== undefined && yearMax !== undefined) {
       where.year = Between(yearMin, yearMax);

@@ -4,6 +4,18 @@ export type Transmission = 'AUTOMATIC' | 'MANUAL' | 'SEMI_AUTOMATIC';
 export type FuelType = 'PETROL' | 'DIESEL' | 'HYBRID' | 'ELECTRIC' | 'LPG' | 'CNG';
 export type DriveType = 'RHD' | 'LHD';
 export type MileageUnit = 'KM' | 'MILES';
+export type VehicleBodyType =
+  | 'SEDAN'
+  | 'SUV'
+  | 'HATCHBACK'
+  | 'COUPE'
+  | 'CONVERTIBLE'
+  | 'WAGON'
+  | 'PICKUP'
+  | 'VAN'
+  | 'MPV'
+  | 'CROSSOVER'
+  | 'SPORTS';
 
 export interface CreateVehiclePayload {
   tenantId: string;
@@ -21,6 +33,7 @@ export interface CreateVehiclePayload {
   color: string;
   vin?: string;
   engineSize?: string;
+  bodyType?: VehicleBodyType;
   status?: VehicleStatus;
   description?: string;
   features?: string[];
@@ -57,6 +70,7 @@ export interface VehicleSearchPayload {
   condition?: VehicleCondition;
   transmission?: Transmission;
   fuelType?: FuelType;
+  bodyType?: VehicleBodyType;
   status?: VehicleStatus;
   page?: number;
   limit?: number;

@@ -16,6 +16,7 @@ import {
   VEHICLE_FUEL_TYPES,
   VEHICLE_DRIVE_TYPES,
   VEHICLE_MILEAGE_UNITS,
+  VEHICLE_BODY_TYPES,
   CURRENCIES,
 } from '@/constants/vehicle.constants';
 
@@ -130,6 +131,7 @@ export function AddVehicleForm() {
           <SelectField name="transmission" label="Transmission" placeholder="Select transmission" options={VEHICLE_TRANSMISSIONS} required />
           <SelectField name="fuelType" label="Fuel Type" placeholder="Select fuel type" options={VEHICLE_FUEL_TYPES} required />
           <SelectField name="driveType" label="Drive Side" placeholder="Select drive side" options={VEHICLE_DRIVE_TYPES} required />
+          <SelectField name="bodyType" label="Body Type" placeholder="Select body type" options={VEHICLE_BODY_TYPES} />
         </CardContent>
       </Card>
 

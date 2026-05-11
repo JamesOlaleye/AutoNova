@@ -50,6 +50,9 @@ export class Vehicle extends BaseEntity {
   @Column({ nullable: true })
   engineSize: string;
 
+  @Column({ nullable: true })
+  bodyType: string;
+
   @Column({ default: 'AVAILABLE' })
   @Index()
   status: string;

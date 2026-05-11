@@ -5,6 +5,7 @@ export type FuelType = 'PETROL' | 'DIESEL' | 'HYBRID' | 'ELECTRIC' | 'LPG' | 'CN
 export type DriveType = 'RHD' | 'LHD';
 export type MileageUnit = 'KM' | 'MILES';
 export type LeadType = 'INQUIRY' | 'TEST_DRIVE' | 'TRADE_IN' | 'FINANCING';
+export type BodyType = 'SEDAN' | 'SUV' | 'HATCHBACK' | 'COUPE' | 'CONVERTIBLE' | 'WAGON' | 'PICKUP' | 'VAN' | 'MPV' | 'CROSSOVER' | 'SPORTS';
 
 export interface Vehicle {
   id: string;
@@ -20,6 +21,7 @@ export interface Vehicle {
   transmission: Transmission;
   fuelType: FuelType;
   driveType: DriveType;
+  bodyType: BodyType | null;
   color: string;
   vin: string | null;
   engineSize: string | null;
@@ -56,6 +58,7 @@ export interface VehicleFilters {
   condition?: string;
   fuelType?: string;
   transmission?: string;
+  bodyType?: string;
   minPrice?: number;
   maxPrice?: number;
   status?: string;

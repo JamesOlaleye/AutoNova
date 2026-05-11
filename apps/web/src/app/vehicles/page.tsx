@@ -19,6 +19,7 @@ interface PageProps {
     condition?: string;
     fuelType?: string;
     transmission?: string;
+    bodyType?: string;
   }>;
 }
 
@@ -33,6 +34,7 @@ export default async function VehiclesPage({ searchParams }: PageProps) {
     condition: params.condition,
     fuelType: params.fuelType,
     transmission: params.transmission,
+    bodyType: params.bodyType,
   });
 
   return (

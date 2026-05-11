@@ -8,7 +8,7 @@ import { EnquiryForm } from './_components/enquiry-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatMileage, idFromSlug } from '@/lib/utils';
-import { CONDITION_LABEL, FUEL_LABEL, TRANSMISSION_LABEL } from '@/constants/vehicle.constants';
+import { CONDITION_LABEL, FUEL_LABEL, TRANSMISSION_LABEL, BODY_TYPE_LABEL } from '@/constants/vehicle.constants';
 import type { VehicleCondition } from '@/types';
 
 interface PageProps {
@@ -83,6 +83,9 @@ export default async function VehicleDetailPage({ params }: PageProps) {
     { icon: Car, label: 'Drive', value: vehicle.driveType },
   ];
 
+  if (vehicle.bodyType) {
+    specs.push({ icon: Car, label: 'Body Type', value: BODY_TYPE_LABEL[vehicle.bodyType] ?? vehicle.bodyType });
+  }
   if (vehicle.engineSize) {
     specs.push({ icon: Car, label: 'Engine', value: vehicle.engineSize });
   }

@@ -36,6 +36,27 @@ export const VEHICLE_STATUSES = [
   { value: 'SOLD', label: 'Sold' },
 ] as const;
 
+export const VEHICLE_BODY_TYPES = [
+  { value: 'SEDAN',       label: 'Sedan / Saloon' },
+  { value: 'SUV',         label: 'SUV / 4x4' },
+  { value: 'HATCHBACK',   label: 'Hatchback' },
+  { value: 'COUPE',       label: 'Coupe' },
+  { value: 'CONVERTIBLE', label: 'Convertible / Cabriolet' },
+  { value: 'WAGON',       label: 'Wagon / Estate' },
+  { value: 'PICKUP',      label: 'Pickup / Truck' },
+  { value: 'VAN',         label: 'Van' },
+  { value: 'MPV',         label: 'MPV / Minivan' },
+  { value: 'CROSSOVER',   label: 'Crossover' },
+  { value: 'SPORTS',      label: 'Sports Car' },
+] as const;
+
+export const BODY_TYPE_LABEL: Record<string, string> = {
+  SEDAN: 'Sedan / Saloon', SUV: 'SUV / 4x4', HATCHBACK: 'Hatchback',
+  COUPE: 'Coupe', CONVERTIBLE: 'Convertible', WAGON: 'Wagon / Estate',
+  PICKUP: 'Pickup / Truck', VAN: 'Van', MPV: 'MPV / Minivan',
+  CROSSOVER: 'Crossover', SPORTS: 'Sports Car',
+};
+
 export const CONDITION_LABEL: Record<string, string> = {
   NEW: 'New', USED: 'Used', CERTIFIED_USED: 'Certified Used',
 };

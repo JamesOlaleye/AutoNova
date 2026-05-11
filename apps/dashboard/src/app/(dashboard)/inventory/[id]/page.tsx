@@ -13,7 +13,7 @@ import { VehicleImageUpload } from './_components/vehicle-image-upload';
 import { VehicleStatusUpdate } from './_components/vehicle-status-update';
 import { formatCurrency, formatMileage, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { CONDITION_LABEL, FUEL_LABEL, TRANSMISSION_LABEL } from '@/constants/vehicle.constants';
+import { CONDITION_LABEL, FUEL_LABEL, TRANSMISSION_LABEL, BODY_TYPE_LABEL } from '@/constants/vehicle.constants';
 import type { VehicleStatus } from '@/types';
 
 interface PageProps {
@@ -52,6 +52,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
     { icon: Palette,   label: 'Colour',         value: vehicle.color },
     { icon: Car,       label: 'Drive Side',      value: vehicle.driveType },
     { icon: Tag,       label: 'Condition',       value: CONDITION_LABEL_MAP[vehicle.condition] ?? vehicle.condition },
+    ...(vehicle.bodyType ? [{ icon: Car, label: 'Body Type', value: BODY_TYPE_LABEL[vehicle.bodyType] ?? vehicle.bodyType }] : []),
     ...(vehicle.engineSize ? [{ icon: Car, label: 'Engine', value: vehicle.engineSize }] : []),
     ...(vehicle.vin ? [{ icon: Hash, label: 'VIN', value: vehicle.vin }] : []),
   ];

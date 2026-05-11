@@ -4,7 +4,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { VEHICLE_CONDITIONS, VEHICLE_FUEL_TYPES, VEHICLE_TRANSMISSIONS } from '@/constants/vehicle.constants';
+import { VEHICLE_CONDITIONS, VEHICLE_FUEL_TYPES, VEHICLE_TRANSMISSIONS, VEHICLE_BODY_TYPES } from '@/constants/vehicle.constants';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -58,7 +58,7 @@ export function VehicleFilters({ total }: { total: number }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const hasFilters = ['condition', 'fuelType', 'transmission'].some(
+  const hasFilters = ['condition', 'fuelType', 'transmission', 'bodyType'].some(
     (key) => searchParams.has(key),
   );
 
@@ -92,6 +92,11 @@ export function VehicleFilters({ total }: { total: number }) {
           placeholder="Transmission"
           paramKey="transmission"
           options={VEHICLE_TRANSMISSIONS}
+        />
+        <FilterSelect
+          placeholder="Body Type"
+          paramKey="bodyType"
+          options={VEHICLE_BODY_TYPES}
         />
 
         {hasFilters && (
