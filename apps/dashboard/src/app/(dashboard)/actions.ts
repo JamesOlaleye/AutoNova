@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { loginApi, logoutApi, registerStaffApi } from '@/lib/api/auth';
-import { createVehicle, uploadVehicleImage, deleteVehicleImage } from '@/lib/api/vehicles';
+import { createVehicle, updateVehicle, uploadVehicleImage, deleteVehicleImage } from '@/lib/api/vehicles';
 import { updateLead } from '@/lib/api/leads';
 import { createOrder, updateOrder } from '@/lib/api/orders';
 import { updateUser, deleteUser } from '@/lib/api/users';
@@ -85,6 +85,49 @@ export async function createVehicleAction(
   }
 
   redirect(`/inventory/${vehicleId}`);
+}
+
+export async function updateVehicleAction(
+  id: string,
+  _prevState: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const raw = Object.fromEntries(formData.entries());
+  const parsed = createVehicleSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    const firstError = parsed.error.errors[0];
+    return { error: `${firstError.path[0]}: ${firstError.message}` };
+  }
+
+  try {
+    await updateVehicle(id, parsed.data as CreateVehicleInput, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to update vehicle. Please try again.' };
+  }
+
+  redirect(`/inventory/${id}`);
+}
+
+export async function updateVehicleStatusAction(
+  id: string,
+  status: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateVehicle(id, { status: status as import('@/types').VehicleStatus }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to update vehicle status.' };
+  }
+
+  return {};
 }
 
 export async function updateLeadStatusAction(

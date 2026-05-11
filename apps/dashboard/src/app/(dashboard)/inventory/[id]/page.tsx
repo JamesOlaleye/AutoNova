@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   ChevronLeft, Car, Gauge, Fuel, GitFork,
-  Calendar, Palette, Tag, Hash, Camera,
+  Calendar, Palette, Tag, Hash, Camera, Pencil,
 } from 'lucide-react';
 import { getSession } from '@/lib/session';
 import { getVehicle } from '@/lib/api/vehicles';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { VehicleImageUpload } from './_components/vehicle-image-upload';
+import { VehicleStatusUpdate } from './_components/vehicle-status-update';
 import { formatCurrency, formatMileage, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { CONDITION_LABEL, FUEL_LABEL, TRANSMISSION_LABEL } from '@/constants/vehicle.constants';
@@ -78,6 +80,12 @@ export default async function VehicleDetailPage({ params }: PageProps) {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button asChild variant="outline" size="sm" className="gap-1.5">
+            <Link href={`/inventory/${vehicle.id}/edit`}>
+              <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+              Edit
+            </Link>
+          </Button>
           <Badge variant={statusConfig.variant} className="gap-1.5 text-sm">
             <span className={cn('h-2 w-2 rounded-full', statusConfig.dot)} aria-hidden="true" />
             {statusConfig.label}
@@ -173,32 +181,24 @@ export default async function VehicleDetailPage({ params }: PageProps) {
 
           {/* Status */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">Status</h2>
-            <div className="space-y-1.5">
-              {(['DRAFT', 'AVAILABLE', 'RESERVED', 'SOLD'] as VehicleStatus[]).map((s) => {
-                const cfg = STATUS_CONFIG[s];
-                const isActive = s === vehicle.status;
-                return (
-                  <div key={s} className={cn(
-                    'flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs',
-                    isActive ? 'bg-muted font-semibold text-foreground' : 'text-muted-foreground',
-                  )}>
-                    <span className={cn('h-2 w-2 shrink-0 rounded-full', isActive ? cfg.dot : 'bg-muted-foreground/20')} aria-hidden="true" />
-                    {cfg.label}
-                    {isActive && <span className="ml-auto text-[10px] font-medium text-primary">Current</span>}
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">
-              Status changes coming in Phase 2 UI update.
-            </p>
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Listing Status</h2>
+            <VehicleStatusUpdate
+              vehicleId={vehicle.id}
+              currentStatus={vehicle.status as VehicleStatus}
+            />
           </div>
 
           {/* Quick links */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">
             <h2 className="mb-3 text-sm font-semibold text-foreground">Actions</h2>
             <div className="space-y-2">
+              <Link
+                href={`/inventory/${vehicle.id}/edit`}
+                className="flex min-h-[44px] w-full items-center gap-2.5 rounded-lg bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+                Edit Vehicle Details
+              </Link>
               <Link
                 href="/inventory"
                 className="flex min-h-[44px] w-full items-center gap-2.5 rounded-lg border bg-background px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
@@ -208,7 +208,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
               </Link>
               <Link
                 href="/inventory/new"
-                className="flex min-h-[44px] w-full items-center gap-2.5 rounded-lg bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="flex min-h-[44px] w-full items-center gap-2.5 rounded-lg border bg-background px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Car className="h-4 w-4" aria-hidden="true" />
                 Add Another Vehicle

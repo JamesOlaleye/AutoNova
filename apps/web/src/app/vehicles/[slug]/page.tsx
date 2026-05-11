@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, Car, Gauge, Fuel, GitFork, Calendar, Palette, MessageCircle } from 'lucide-react';
 import { getVehicle } from '@/lib/api/vehicles';
@@ -106,15 +107,58 @@ export default async function VehicleDetailPage({ params }: PageProps) {
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left — image + specs */}
+          {/* Left — image gallery + specs */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Image gallery placeholder */}
-            <div
-              className="flex h-64 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 sm:h-80 lg:h-96"
-              aria-label={`Photo of ${vehicleName}`}
-            >
-              <Car className="h-24 w-24 text-slate-300" aria-hidden="true" />
-            </div>
+            {/* Image gallery */}
+            {vehicle.images && vehicle.images.length > 0 ? (
+              <div className="space-y-2">
+                {/* Primary image */}
+                <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200">
+                  <Image
+                    src={vehicle.images[0]}
+                    alt={`${vehicleName} — main photo`}
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 66vw"
+                  />
+                </div>
+                {/* Thumbnails */}
+                {vehicle.images.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                    {vehicle.images.slice(1, 5).map((url, i) => (
+                      <div key={url} className="relative aspect-video overflow-hidden rounded-lg bg-muted">
+                        <Image
+                          src={url}
+                          alt={`${vehicleName} — photo ${i + 2}`}
+                          fill
+                          className="object-cover transition-opacity hover:opacity-90"
+                          sizes="20vw"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                    {vehicle.images.length > 5 && (
+                      <div className="relative aspect-video overflow-hidden rounded-lg bg-muted flex items-center justify-center">
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          +{vehicle.images.length - 5} more
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                className="flex aspect-[16/10] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200"
+                aria-label={`No photos available for ${vehicleName}`}
+              >
+                <div className="text-center">
+                  <Car className="mx-auto h-20 w-20 text-slate-300" aria-hidden="true" />
+                  <p className="mt-2 text-sm text-slate-400">Photos coming soon</p>
+                </div>
+              </div>
+            )}
 
             {/* Title + price */}
             <div>

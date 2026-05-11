@@ -415,13 +415,29 @@ Frontend (`apps/web`) — complete ✓:
 
 ---
 
-### Phase 3 — Monetization
+### Phase 3 — Monetization & CRM Depth
+
+#### Monetization (payments)
 - [ ] Implement Stripe subscription creation (payments-service)
 - [ ] Implement Paystack subscription creation
 - [ ] Payments DB entity (track active subscriptions)
 - [ ] Enforce tier limits in tenants-service (listing count, staff count)
 - [ ] Billing portal links for dealers
 - [ ] Platform admin: dealer subscription overview
+
+#### Storefront depth
+- [ ] Dealer info / about page (`/about`) — hours, map embed, contact form, WhatsApp button; fetches from tenants-service (requires public tenant endpoint: `GET /api/v1/tenants/public/:slug`)
+- [ ] Replace white-label env vars with API call to `GET /api/v1/tenants/public/:slug` — add public endpoint to api-gateway tenants module (no JWT required, returns safe public fields only)
+- [ ] Vehicle comparison — side-by-side up to 3 vehicles (client-side, stored in URL params)
+- [ ] Financing calculator — price, down payment, rate, term → monthly payment (client-side, no API)
+- [ ] Sitemap (`app/sitemap.ts`) — dynamic, lists all AVAILABLE vehicles with ISR revalidation
+- [ ] Wishlist / saved vehicles (localStorage for guests, user account later)
+
+#### Dashboard depth
+- [ ] Notifications center — bell icon in header shows real list of recent new enquiries and scheduled test drives (poll `GET /leads?status=NEW&limit=10` on interval or use SSE)
+- [ ] Customer profiles — deduplicate leads by email, show all interactions per customer
+- [ ] Document uploads (contracts, titles) — attach files to orders via media-service
+- [ ] Password change — staff member can change their own password from settings
 
 ---
 
@@ -433,6 +449,9 @@ Frontend (`apps/web`) — complete ✓:
 - [ ] Social media auto-posting (new vehicle → Facebook/Instagram)
 - [ ] Custom domain support per dealer (Cloudflare Workers)
 - [ ] PWA manifest for customer website
+- [ ] Bulk CSV import for inventory (dashboard)
+- [ ] Price drop alerts (email/SMS via notifications-service when vehicle price drops)
+- [ ] Trade-in estimator on storefront
 
 ---
 
