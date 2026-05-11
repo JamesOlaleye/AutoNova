@@ -73,3 +73,32 @@ export async function deleteVehicle(
     tenantId,
   });
 }
+
+export async function uploadVehicleImage(
+  id: string,
+  base64: string,
+  token: string,
+  tenantId: string,
+): Promise<Vehicle> {
+  return apiRequest<Vehicle>(`/vehicles/${id}/images`, {
+    method: 'POST',
+    body: { base64 },
+    token,
+    tenantId,
+  });
+}
+
+export async function deleteVehicleImage(
+  id: string,
+  publicId: string,
+  url: string,
+  token: string,
+  tenantId: string,
+): Promise<Vehicle> {
+  return apiRequest<Vehicle>(`/vehicles/${id}/images`, {
+    method: 'DELETE',
+    body: { publicId, url },
+    token,
+    tenantId,
+  });
+}

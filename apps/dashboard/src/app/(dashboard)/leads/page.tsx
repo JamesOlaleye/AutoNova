@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Users, Mail, Phone } from 'lucide-react';
 import { getSession } from '@/lib/session';
 import { getLeads } from '@/lib/api/leads';
@@ -44,7 +45,7 @@ function LeadRow({ lead }: { lead: Lead }) {
   const config = STATUS_CONFIG[lead.status] ?? { label: lead.status, variant: 'secondary' as const, dot: 'bg-gray-400' };
 
   return (
-    <div className="group flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/30">
+    <Link href={`/leads/${lead.id}`} className="group flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/30">
       {/* Avatar */}
       <div className={cn(
         'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold',
@@ -99,12 +100,12 @@ function LeadRow({ lead }: { lead: Lead }) {
           </p>
         </div>
 
-        {/* Status update */}
-        <div className="shrink-0">
+        {/* Status update — stop propagation so clicking it doesn't navigate */}
+        <div className="shrink-0" onClick={(e) => e.preventDefault()}>
           <LeadStatusUpdate lead={lead} />
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

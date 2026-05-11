@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { loginApi, logoutApi } from '@/lib/api/auth';
-import { createVehicle } from '@/lib/api/vehicles';
+import { createVehicle, uploadVehicleImage, deleteVehicleImage } from '@/lib/api/vehicles';
 import { updateLead } from '@/lib/api/leads';
 import { setSession, getSession, clearSession } from '@/lib/session';
 import { ApiError } from '@/lib/api';
@@ -72,14 +72,16 @@ export async function createVehicleAction(
     return { error: `${firstError.path[0]}: ${firstError.message}` };
   }
 
+  let vehicleId: string;
   try {
-    await createVehicle(parsed.data as CreateVehicleInput, session.token, session.tenantId);
+    const vehicle = await createVehicle(parsed.data as CreateVehicleInput, session.token, session.tenantId);
+    vehicleId = vehicle.id;
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Failed to create vehicle. Please try again.' };
   }
 
-  redirect('/inventory');
+  redirect(`/inventory/${vehicleId}`);
 }
 
 export async function updateLeadStatusAction(
@@ -94,6 +96,77 @@ export async function updateLeadStatusAction(
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Failed to update lead.' };
+  }
+
+  return {};
+}
+
+export async function assignLeadAction(
+  id: string,
+  assignedTo: string | null,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateLead(id, { assignedTo: assignedTo ?? undefined }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to assign lead.' };
+  }
+
+  return {};
+}
+
+export async function updateLeadNotesAction(
+  id: string,
+  notes: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateLead(id, { notes }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to save notes.' };
+  }
+
+  return {};
+}
+
+// ─── Vehicle Images ───────────────────────────────────────────────────────────
+
+export async function uploadVehicleImageAction(
+  vehicleId: string,
+  base64: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await uploadVehicleImage(vehicleId, base64, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to upload image. Please try again.' };
+  }
+
+  return {};
+}
+
+export async function deleteVehicleImageAction(
+  vehicleId: string,
+  publicId: string,
+  url: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await deleteVehicleImage(vehicleId, publicId, url, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to delete image.' };
   }
 
   return {};

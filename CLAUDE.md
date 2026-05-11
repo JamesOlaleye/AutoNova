@@ -406,8 +406,8 @@ Frontend (`apps/web`) — complete ✓:
 - [ ] Replace placeholder API keys with real Resend + Twilio credentials in .env.development
 - [x] Implement Cloudinary upload in media-service — POST /vehicles/:id/images + DELETE /vehicles/:id/images
 - [ ] Replace placeholder Cloudinary credentials in .env.development
-- [ ] Dashboard: lead detail + status update UI
-- [ ] Dashboard: vehicle image upload UI (backend ready — needs upload field in add-vehicle form)
+- [x] Dashboard: lead detail + status update UI — /leads/[id] with status pipeline, agent assignment, notes, quick contact (email/phone/WhatsApp)
+- [x] Dashboard: vehicle image upload UI — /inventory/[id] with drag-and-drop upload, image gallery, delete; add-vehicle redirects to detail page after creation
 - [ ] Dashboard: test drive calendar
 - [ ] Dashboard: order/deal management UI
 - [ ] Dashboard: staff management UI (invite staff, assign roles, remove team members)

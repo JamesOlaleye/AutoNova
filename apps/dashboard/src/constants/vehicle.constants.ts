@@ -36,6 +36,19 @@ export const VEHICLE_STATUSES = [
   { value: 'SOLD', label: 'Sold' },
 ] as const;
 
+export const CONDITION_LABEL: Record<string, string> = {
+  NEW: 'New', USED: 'Used', CERTIFIED_USED: 'Certified Used',
+};
+
+export const FUEL_LABEL: Record<string, string> = {
+  PETROL: 'Petrol', DIESEL: 'Diesel', HYBRID: 'Hybrid',
+  ELECTRIC: 'Electric', LPG: 'LPG', CNG: 'CNG',
+};
+
+export const TRANSMISSION_LABEL: Record<string, string> = {
+  AUTOMATIC: 'Automatic', MANUAL: 'Manual', SEMI_AUTOMATIC: 'Semi-Automatic',
+};
+
 export const CURRENCIES = [
   { value: 'NGN', label: 'NGN — Nigerian Naira' },
   { value: 'GBP', label: 'GBP — British Pound' },

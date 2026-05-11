@@ -74,12 +74,8 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
 
         {/* Action */}
         <div className="mt-4 border-t pt-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-11 w-full justify-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/5 hover:text-primary sm:h-8"
-          >
-            View details
+          <Button asChild variant="ghost" size="sm" className="h-11 w-full justify-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/5 hover:text-primary sm:h-8">
+            <Link href={`/inventory/${vehicle.id}`}>View details</Link>
           </Button>
         </div>
       </div>
