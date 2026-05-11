@@ -426,6 +426,9 @@ Frontend (`apps/web`) — complete ✓:
 - [ ] Platform admin: dealer subscription overview
 
 #### Storefront depth
+- [ ] Price range filter — min/max price inputs on the vehicles listing page; passed as `minPrice`/`maxPrice` query params to `GET /vehicles` (backend already supports these via VehicleSearchPayload). Buyers filter by budget first — this is the most-requested filter after body type.
+- [ ] Filter sidebar on desktop — move condition/fuel/transmission/body-type/price-range filters from a top bar into a fixed left sidebar on `lg+` screens. Top bar stays on mobile. More room for filters, always visible while scrolling through listings.
+- [ ] Larger vehicle photos on cards — increase card image height from `h-48` to `h-56` or `h-64` on the storefront `VehicleCard`. The photo is the product; buyers decide by image first. Cards in reference designs use 60%+ of card height for the photo.
 - [ ] Dealer info / about page (`/about`) — hours, map embed, contact form, WhatsApp button; fetches from tenants-service (requires public tenant endpoint: `GET /api/v1/tenants/public/:slug`)
 - [ ] Replace white-label env vars with API call to `GET /api/v1/tenants/public/:slug` — add public endpoint to api-gateway tenants module (no JWT required, returns safe public fields only)
 - [ ] Vehicle comparison — side-by-side up to 3 vehicles (client-side, stored in URL params)
