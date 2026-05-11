@@ -4,10 +4,11 @@ import { Car, Search, Shield, TrendingUp, ArrowRight } from 'lucide-react';
 import { getVehicles } from '@/lib/api/vehicles';
 import { VehicleCard } from '@/components/common/vehicle-card';
 import { Button } from '@/components/ui/button';
+import { dealerConfig } from '@/lib/dealer-config';
 import type { Vehicle } from '@/types';
 
 export const metadata: Metadata = {
-  title: 'AutoNova — Find Your Next Vehicle',
+  title: `${dealerConfig.name} — Find Your Next Vehicle`,
 };
 
 const features = [
@@ -53,8 +54,9 @@ export default async function HomePage() {
               </span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base text-white/60 leading-relaxed">
-              Browse certified inventory from trusted dealerships across Nigeria, the UK, and beyond.
-              New, used, and certified pre-owned vehicles.
+              Browse certified inventory from <strong className="text-white/90">{dealerConfig.name}</strong>.
+              {dealerConfig.city && ` Based in ${dealerConfig.city}.`}
+              {' '}New, used, and certified pre-owned vehicles.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Button asChild size="lg" className="w-full sm:w-auto">
@@ -127,8 +129,8 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* CTA — dealer acquisition */}
-      <section className="bg-primary py-16" aria-labelledby="dealer-cta-heading">
+      {/* CTA — contact the dealer */}
+      <section className="bg-primary py-16" aria-labelledby="contact-cta-heading">
         <div className="container text-center">
           <div className="mx-auto max-w-xl">
             <div className="mb-4 flex justify-center">
@@ -136,16 +138,30 @@ export default async function HomePage() {
                 <Car className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
             </div>
-            <h2 id="dealer-cta-heading" className="text-2xl font-bold text-white sm:text-3xl">
-              Own a dealership?
+            <h2 id="contact-cta-heading" className="text-2xl font-bold text-white sm:text-3xl">
+              Ready to find your car?
             </h2>
             <p className="mt-3 text-base text-white/70 leading-relaxed">
-              Join AutoNova to manage your inventory, capture leads, and grow your business online.
-              Plans start from $49/month.
+              The team at <strong className="text-white">{dealerConfig.name}</strong> is here to help
+              you find the perfect vehicle. Browse our full inventory or get in touch.
             </p>
-            <Button asChild size="lg" variant="outline" className="mt-6 border-white/30 bg-white text-primary hover:bg-white/90">
-              <Link href="#">Get started free</Link>
-            </Button>
+            <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Button asChild size="lg" variant="outline" className="w-full border-white/30 bg-white text-primary hover:bg-white/90 sm:w-auto">
+                <Link href="/vehicles">Browse Inventory</Link>
+              </Button>
+              {dealerConfig.phone && (
+                <Button asChild size="lg" variant="ghost" className="w-full border border-white/20 text-white hover:bg-white/10 sm:w-auto">
+                  <a
+                    href={`https://wa.me/${dealerConfig.phone.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`WhatsApp ${dealerConfig.name}`}
+                  >
+                    WhatsApp Us
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </section>

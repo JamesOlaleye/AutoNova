@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Car, Menu, X, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { dealerConfig } from '@/lib/dealer-config';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -20,11 +21,11 @@ export function Navbar() {
     <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="container flex h-16 items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="AutoNova home">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label={`${dealerConfig.name} home`}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-sm">
             <Car className="h-4 w-4 text-white" aria-hidden="true" />
           </div>
-          <span className="text-base font-bold tracking-tight text-foreground">AutoNova</span>
+          <span className="text-base font-bold tracking-tight text-foreground">{dealerConfig.name}</span>
         </Link>
 
         {/* Desktop nav */}

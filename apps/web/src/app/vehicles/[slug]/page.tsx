@@ -11,7 +11,7 @@ import { CONDITION_LABEL, FUEL_LABEL, TRANSMISSION_LABEL } from '@/constants/veh
 import type { VehicleCondition } from '@/types';
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 const CONDITION_BADGE: Record<VehicleCondition, 'success' | 'info' | 'warning'> = {
@@ -19,7 +19,8 @@ const CONDITION_BADGE: Record<VehicleCondition, 'success' | 'info' | 'warning'> 
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const id = idFromSlug(params.slug);
+  const { slug } = await params;
+  const id = idFromSlug(slug);
   try {
     const vehicle = await getVehicle(id);
     return {
@@ -37,7 +38,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function VehicleDetailPage({ params }: PageProps) {
-  const id = idFromSlug(params.slug);
+  const { slug } = await params;
+  const id = idFromSlug(slug);
   let vehicle;
   try {
     vehicle = await getVehicle(id);

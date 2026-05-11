@@ -411,7 +411,7 @@ Frontend (`apps/web`) — complete ✓:
 - [x] Dashboard: test drive calendar — /test-drives grouped by date (upcoming/past/unscheduled), schedule via date picker on lead detail page
 - [x] Dashboard: order/deal management UI — /orders list, /orders/new create form, /orders/[id] detail with status pipeline + notes
 - [x] Dashboard: staff management UI — /staff list with inline role change and deactivate, /staff/invite form (DEALER_ADMIN only)
-- [ ] White-label storefront per tenant — fetch dealer name, logo, contact info from tenants-service and display on apps/web navbar, footer, page titles and about page instead of AutoNova branding
+- [x] White-label storefront per tenant — dealer name/contact/tagline in navbar, footer, metadata, hero copy; sourced from env vars (Phase 3: replace with GET /tenants/public/:slug API call)
 
 ---
 

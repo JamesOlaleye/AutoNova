@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
+import { dealerConfig } from '@/lib/dealer-config';
 import './globals.css';
 
 const inter = Inter({
@@ -11,9 +12,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'AutoNova — Find Your Next Vehicle', template: '%s | AutoNova' },
-  description: 'Browse premium vehicles from certified dealers. New and used cars across Nigeria, UK and beyond.',
-  keywords: ['cars', 'vehicles', 'car dealership', 'buy car', 'used cars', 'new cars'],
+  title: {
+    default: `${dealerConfig.name} — Find Your Next Vehicle`,
+    template: `%s | ${dealerConfig.name}`,
+  },
+  description: `Browse premium vehicles at ${dealerConfig.name}. ${dealerConfig.tagline}.${dealerConfig.city ? ` Based in ${dealerConfig.city}.` : ''}`,
+  keywords: ['cars', 'vehicles', 'car dealership', 'buy car', 'used cars', 'new cars', dealerConfig.name, dealerConfig.city].filter(Boolean),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -14,24 +14,25 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     condition?: string;
     fuelType?: string;
     transmission?: string;
-  };
+  }>;
 }
 
 export default async function VehiclesPage({ searchParams }: PageProps) {
-  const page = Math.max(1, Number(searchParams.page ?? 1));
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page ?? 1));
   const limit = 12;
 
   const { data: vehicles, total, totalPages } = await getVehicles({
     page,
     limit,
-    condition: searchParams.condition,
-    fuelType: searchParams.fuelType,
-    transmission: searchParams.transmission,
+    condition: params.condition,
+    fuelType: params.fuelType,
+    transmission: params.transmission,
   });
 
   return (
