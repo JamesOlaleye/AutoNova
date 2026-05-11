@@ -4,10 +4,12 @@ import { redirect } from 'next/navigation';
 import { loginApi, logoutApi } from '@/lib/api/auth';
 import { createVehicle, uploadVehicleImage, deleteVehicleImage } from '@/lib/api/vehicles';
 import { updateLead } from '@/lib/api/leads';
+import { createOrder, updateOrder } from '@/lib/api/orders';
 import { setSession, getSession, clearSession } from '@/lib/session';
 import { ApiError } from '@/lib/api';
 import { createVehicleSchema } from '@/lib/schemas/vehicle.schema';
-import type { LeadStatus, CreateVehicleInput } from '@/types';
+import { createOrderSchema } from '@/lib/schemas/order.schema';
+import type { LeadStatus, CreateVehicleInput, CreateOrderInput, OrderStatus } from '@/types';
 
 const DEV_TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID ?? '';
 
@@ -167,6 +169,73 @@ export async function deleteVehicleImageAction(
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Failed to delete image.' };
+  }
+
+  return {};
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+export async function createOrderAction(
+  _prevState: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const raw = Object.fromEntries(formData.entries());
+  // Strip empty optional UUID fields so Zod doesn't reject empty strings as UUIDs
+  if (!raw.leadId) delete raw.leadId;
+  if (!raw.salesAgentId) delete raw.salesAgentId;
+  if (!raw.downPayment) delete raw.downPayment;
+  if (!raw.financingTerm) delete raw.financingTerm;
+
+  const parsed = createOrderSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0].message };
+  }
+
+  let orderId: string;
+  try {
+    const order = await createOrder(parsed.data as CreateOrderInput, session.token, session.tenantId);
+    orderId = order.id;
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to create order. Please try again.' };
+  }
+
+  redirect(`/orders/${orderId}`);
+}
+
+export async function updateOrderStatusAction(
+  id: string,
+  status: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateOrder(id, { status: status as OrderStatus }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to update order status.' };
+  }
+
+  return {};
+}
+
+export async function updateOrderNotesAction(
+  id: string,
+  notes: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateOrder(id, { notes }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to save notes.' };
   }
 
   return {};

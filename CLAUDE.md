@@ -409,7 +409,7 @@ Frontend (`apps/web`) — complete ✓:
 - [x] Dashboard: lead detail + status update UI — /leads/[id] with status pipeline, agent assignment, notes, quick contact (email/phone/WhatsApp)
 - [x] Dashboard: vehicle image upload UI — /inventory/[id] with drag-and-drop upload, image gallery, delete; add-vehicle redirects to detail page after creation
 - [ ] Dashboard: test drive calendar
-- [ ] Dashboard: order/deal management UI
+- [x] Dashboard: order/deal management UI — /orders list, /orders/new create form, /orders/[id] detail with status pipeline + notes
 - [ ] Dashboard: staff management UI (invite staff, assign roles, remove team members)
 - [ ] White-label storefront per tenant — fetch dealer name, logo, contact info from tenants-service and display on apps/web navbar, footer, page titles and about page instead of AutoNova branding
 

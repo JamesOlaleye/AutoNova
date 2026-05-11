@@ -34,13 +34,7 @@ export const navigation: NavGroup[] = [
     items: [
       { href: '/inventory', label: 'Inventory', icon: Car },
       { href: '/leads', label: 'Enquiries', icon: Users },
-      {
-        href: '/orders',
-        label: 'Orders',
-        icon: ShoppingCart,
-        disabled: true,
-        badge: 'Soon',
-      },
+      { href: '/orders', label: 'Orders', icon: ShoppingCart },
     ],
   },
   {
