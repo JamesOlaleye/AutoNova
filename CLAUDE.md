@@ -437,11 +437,35 @@ Frontend (`apps/web`) — complete ✓:
 ---
 
 ### Phase 5 — Production & Scale
-- [ ] Redis caching for vehicle listing queries (hot path)
-- [ ] Azure SQL deployment (production SQL Server)
-- [ ] GitHub Actions CI/CD pipeline
-- [ ] Sentry error tracking in all services
-- [ ] Load testing (k6 or Artillery)
+
+#### Infrastructure Upgrades
+
+- [ ] **TCP → RabbitMQ transport migration**
+  - Why: TCP works for Phase 1-4 but has no retry, no dead letter queue, no persistence. If a service is temporarily down, messages are lost. RabbitMQ adds reliable delivery, message acknowledgment, and retry with backoff — critical once real dealers depend on notifications.
+  - How: NestJS abstracts the transport layer. Only the `ClientsModule` config in each service changes — zero business logic changes. This is the payoff for the clean microservice architecture we built.
+  - Already in `docker-compose.yml` — just needs wiring up.
+
+- [ ] **Redis — caching + rate limiting**
+  - Why caching: `GET /vehicles` is public and unauthenticated — the most-hit endpoint. Without caching, every customer page load hits SQL Server. Redis caches the paginated vehicle listings (TTL 60s) eliminating redundant DB reads.
+  - Why rate limiting: public endpoints need protection against abuse and scraping. Redis-based rate limiting (sliding window) at the api-gateway level.
+  - Already in `docker-compose.yml` — just needs wiring up.
+
+- [ ] **Elasticsearch — vehicle search engine** (replaces SQL `LIKE` queries)
+  - Why: SQL Server `LIKE '%toyota%'` and `Between` for price/year ranges work for Phase 1-2 but break down when dealers have 200+ vehicles and customers filter by 5+ criteria simultaneously. Elasticsearch handles faceted search, relevance ranking, and typo tolerance (`Toyot` → Toyota) natively.
+  - Scope: index vehicle listings in Elasticsearch on create/update via vehicles-service. Replace `search()` method in vehicles-service to query Elasticsearch instead of SQL. SQL Server remains the source of truth.
+  - Already in `docker-compose.yml` — just needs wiring up.
+
+- [ ] **Loki + Grafana — centralized log aggregation** (replaces ad-hoc terminal logs)
+  - Why Loki over Kibana/Elasticsearch for logs: Elasticsearch is heavy infrastructure. Loki is purpose-built for logs — it indexes only metadata (labels), not full log content, making it 10x cheaper to run. Grafana is already the industry standard dashboard for operational monitoring.
+  - Why not Kibana for logs: We're already using Elasticsearch for vehicle search. Kibana would give us a second tool for logs when Grafana covers the same need more cheaply. Separate concerns: Elasticsearch + Kibana for search/analytics, Loki + Grafana for logs.
+  - Scope: add a Loki datasource to Grafana, ship logs from all 11 services via a log shipper (Promtail or Fluent Bit).
+
+#### Reliability & Compliance
+
+- [ ] Azure SQL deployment (production SQL Server — Azure SQL managed, Nigeria + UK regions)
+- [ ] GitHub Actions CI/CD pipeline (build → test → deploy on push to main)
+- [ ] Sentry error tracking in all services (why: real-time error alerts with stack traces, better than reading Loki logs reactively — Sentry is proactive, Loki is archival)
+- [ ] Load testing (k6 or Artillery — validate system under 100 concurrent dealers)
 - [ ] Multi-language (i18n) for web + dashboard
 - [ ] GDPR compliance: data export endpoint, data deletion endpoint, cookie consent
 - [ ] NDPR compliance (Nigeria Data Protection Regulation — overlaps with GDPR)
