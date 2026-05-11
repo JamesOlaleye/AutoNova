@@ -104,6 +104,23 @@ export async function updateLeadStatusAction(
   return {};
 }
 
+export async function scheduleTestDriveAction(
+  id: string,
+  scheduledAt: string | null,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateLead(id, { scheduledAt }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to schedule test drive.' };
+  }
+
+  return {};
+}
+
 export async function assignLeadAction(
   id: string,
   assignedTo: string | null,

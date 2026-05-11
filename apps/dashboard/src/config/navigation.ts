@@ -6,6 +6,7 @@ import {
   BarChart3,
   Settings,
   UsersRound,
+  CalendarCheck,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export const navigation: NavGroup[] = [
       { href: '/inventory', label: 'Inventory', icon: Car },
       { href: '/leads', label: 'Enquiries', icon: Users },
       { href: '/orders', label: 'Orders', icon: ShoppingCart },
+      { href: '/test-drives', label: 'Test Drives', icon: CalendarCheck },
     ],
   },
   {

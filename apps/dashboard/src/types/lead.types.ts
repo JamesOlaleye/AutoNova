@@ -23,4 +23,5 @@ export interface UpdateLeadInput {
   status?: LeadStatus;
   assignedTo?: string;
   notes?: string;
+  scheduledAt?: string | null;
 }

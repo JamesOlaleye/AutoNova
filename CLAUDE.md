@@ -408,7 +408,7 @@ Frontend (`apps/web`) — complete ✓:
 - [ ] Replace placeholder Cloudinary credentials in .env.development
 - [x] Dashboard: lead detail + status update UI — /leads/[id] with status pipeline, agent assignment, notes, quick contact (email/phone/WhatsApp)
 - [x] Dashboard: vehicle image upload UI — /inventory/[id] with drag-and-drop upload, image gallery, delete; add-vehicle redirects to detail page after creation
-- [ ] Dashboard: test drive calendar
+- [x] Dashboard: test drive calendar — /test-drives grouped by date (upcoming/past/unscheduled), schedule via date picker on lead detail page
 - [x] Dashboard: order/deal management UI — /orders list, /orders/new create form, /orders/[id] detail with status pipeline + notes
 - [x] Dashboard: staff management UI — /staff list with inline role change and deactivate, /staff/invite form (DEALER_ADMIN only)
 - [ ] White-label storefront per tenant — fetch dealer name, logo, contact info from tenants-service and display on apps/web navbar, footer, page titles and about page instead of AutoNova branding

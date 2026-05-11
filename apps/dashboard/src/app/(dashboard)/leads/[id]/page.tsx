@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { LeadStatusUpdate } from '../_components/lead-status-update';
 import { LeadAssign } from './_components/lead-assign';
 import { LeadNotes } from './_components/lead-notes';
+import { LeadSchedule } from './_components/lead-schedule';
 import { formatCurrency, formatDate, formatMileage } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { LEAD_TYPES } from '@/constants/lead.constants';
@@ -204,6 +205,16 @@ export default async function LeadDetailPage({ params }: PageProps) {
                   View
                 </Link>
               </div>
+            </section>
+          )}
+
+          {/* Test drive scheduling — only shown for TEST_DRIVE enquiries */}
+          {lead.type === 'TEST_DRIVE' && (
+            <section className="rounded-xl border bg-card p-5 shadow-sm" aria-labelledby="schedule-heading">
+              <h2 id="schedule-heading" className="mb-4 text-sm font-semibold text-foreground">
+                Test Drive Schedule
+              </h2>
+              <LeadSchedule leadId={lead.id} scheduledAt={lead.scheduledAt} />
             </section>
           )}
 
