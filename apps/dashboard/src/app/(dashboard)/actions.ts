@@ -1,10 +1,11 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { loginApi, logoutApi } from '@/lib/api/auth';
+import { loginApi, logoutApi, registerStaffApi } from '@/lib/api/auth';
 import { createVehicle, uploadVehicleImage, deleteVehicleImage } from '@/lib/api/vehicles';
 import { updateLead } from '@/lib/api/leads';
 import { createOrder, updateOrder } from '@/lib/api/orders';
+import { updateUser, deleteUser } from '@/lib/api/users';
 import { setSession, getSession, clearSession } from '@/lib/session';
 import { ApiError } from '@/lib/api';
 import { createVehicleSchema } from '@/lib/schemas/vehicle.schema';
@@ -236,6 +237,90 @@ export async function updateOrderNotesAction(
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Failed to save notes.' };
+  }
+
+  return {};
+}
+
+// ─── Staff ───────────────────────────────────────────────────────────────────
+
+export async function inviteStaffAction(
+  _prevState: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const firstName = formData.get('firstName') as string;
+  const lastName = formData.get('lastName') as string;
+  const phone = formData.get('phone') as string;
+  const role = formData.get('role') as string;
+
+  if (!email || !password || !firstName || !lastName || !role) {
+    return { error: 'All required fields must be filled.' };
+  }
+
+  try {
+    await registerStaffApi(
+      { email, password, firstName, lastName, phone: phone || undefined, role },
+      session.token,
+      session.tenantId,
+    );
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to invite staff member.' };
+  }
+
+  redirect('/staff');
+}
+
+export async function updateStaffRoleAction(
+  id: string,
+  role: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateUser(id, { role }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to update role.' };
+  }
+
+  return {};
+}
+
+export async function toggleStaffStatusAction(
+  id: string,
+  isActive: boolean,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await updateUser(id, { isActive }, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to update staff status.' };
+  }
+
+  return {};
+}
+
+export async function removeStaffAction(
+  id: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await deleteUser(id, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to remove staff member.' };
   }
 
   return {};

@@ -19,3 +19,29 @@ export async function getUser(
 ): Promise<User> {
   return apiRequest<User>(`/users/${id}`, { token, tenantId });
 }
+
+export async function updateUser(
+  id: string,
+  data: { role?: string; isActive?: boolean },
+  token: string,
+  tenantId: string,
+): Promise<User> {
+  return apiRequest<User>(`/users/${id}`, {
+    method: 'PATCH',
+    body: data,
+    token,
+    tenantId,
+  });
+}
+
+export async function deleteUser(
+  id: string,
+  token: string,
+  tenantId: string,
+): Promise<void> {
+  return apiRequest<void>(`/users/${id}`, {
+    method: 'DELETE',
+    token,
+    tenantId,
+  });
+}

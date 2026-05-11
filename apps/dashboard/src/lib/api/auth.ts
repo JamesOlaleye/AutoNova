@@ -24,6 +24,26 @@ export async function refreshTokenApi(
   });
 }
 
+export async function registerStaffApi(
+  data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    role: string;
+  },
+  token: string,
+  tenantId: string,
+): Promise<{ user: { id: string; email: string } }> {
+  return apiRequest('/auth/register', {
+    method: 'POST',
+    body: data,
+    token,
+    tenantId,
+  });
+}
+
 export async function logoutApi(token: string, tenantId: string): Promise<void> {
   return apiRequest('/auth/logout', {
     method: 'POST',

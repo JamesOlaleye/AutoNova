@@ -5,6 +5,7 @@ import {
   ShoppingCart,
   BarChart3,
   Settings,
+  UsersRound,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -40,6 +41,12 @@ export const navigation: NavGroup[] = [
   {
     label: 'Business',
     items: [
+      {
+        href: '/staff',
+        label: 'Team',
+        icon: UsersRound,
+        roles: ['DEALER_ADMIN', 'PLATFORM_ADMIN'],
+      },
       {
         href: '/analytics',
         label: 'Analytics',
