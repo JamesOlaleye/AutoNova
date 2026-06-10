@@ -1,10 +1,12 @@
-import { Controller, Get, Post, RawBodyRequest, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, RawBodyRequest, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PaymentsGatewayService } from './payments.gateway.service';
+import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { CancelSubscriptionDto } from './dto/cancel-subscription.dto';
 
 @ApiTags('payments')
 @ApiHeader({ name: 'X-Tenant-ID', description: 'Tenant UUID', required: true })
@@ -16,10 +18,10 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('DEALER_ADMIN', 'PLATFORM_ADMIN')
   @ApiBearerAuth('JWT')
-  @ApiOperation({ summary: 'Create a subscription (Stripe or Paystack)' })
-  @ApiResponse({ status: 201, description: 'Subscription created' })
-  createSubscription(@Req() req: any, @TenantId() tenantId: string) {
-    return this.paymentsService.createSubscription(req.body, tenantId);
+  @ApiOperation({ summary: 'Create a Stripe or Paystack subscription — returns checkoutUrl for Stripe' })
+  @ApiResponse({ status: 201, description: 'Subscription record created; checkoutUrl present for Stripe redirect' })
+  createSubscription(@Body() body: CreateSubscriptionDto, @TenantId() tenantId: string) {
+    return this.paymentsService.createSubscription(body, tenantId);
   }
 
   @Get('subscription')
@@ -30,6 +32,16 @@ export class PaymentsController {
   @ApiResponse({ status: 200, description: 'Active subscription or null' })
   getSubscription(@TenantId() tenantId: string) {
     return this.paymentsService.getSubscription(tenantId);
+  }
+
+  @Post('cancel')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('DEALER_ADMIN', 'PLATFORM_ADMIN')
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Cancel the active subscription for the tenant' })
+  @ApiResponse({ status: 200, description: 'Subscription cancelled' })
+  cancelSubscription(@Body() body: CancelSubscriptionDto, @TenantId() tenantId: string) {
+    return this.paymentsService.cancelSubscription(body, tenantId);
   }
 
   @Post('webhooks/stripe')

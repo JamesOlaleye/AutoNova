@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Lock, ChevronRight, CreditCard, Zap, CheckCircle2 } from 'lucide-react';
+import { Lock, ChevronRight, CreditCard, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getSession } from '@/lib/session';
 import { getTenant } from '@/lib/api/tenants';
 import { getVehicles } from '@/lib/api/vehicles';
 import { getUsers } from '@/lib/api/users';
+import { getSubscription, type Subscription } from '@/lib/api/payments';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { UpgradeButton } from './_components/upgrade-button';
+import { CancelSubscriptionButton } from './_components/cancel-subscription-button';
 
 export const metadata: Metadata = { title: 'Settings' };
 
@@ -43,6 +46,20 @@ const UPGRADE_PLANS = [
   },
 ];
 
+const STATUS_LABEL: Record<string, string> = {
+  ACTIVE: 'Active',
+  TRIALING: 'Free trial',
+  PAST_DUE: 'Payment overdue',
+  CANCELLED: 'Cancelled',
+};
+
+const STATUS_BADGE: Record<string, 'success' | 'info' | 'warning' | 'destructive'> = {
+  ACTIVE: 'success',
+  TRIALING: 'info',
+  PAST_DUE: 'warning',
+  CANCELLED: 'destructive',
+};
+
 function UsageBar({ used, limit, label }: { used: number; limit: number; label: string }) {
   const unlimited = limit === -1;
   const pct = unlimited ? 0 : Math.min(100, Math.round((used / limit) * 100));
@@ -77,14 +94,37 @@ function UsageBar({ used, limit, label }: { used: number; limit: number; label: 
   );
 }
 
-export default async function SettingsPage() {
+function SubscriptionStatus({ sub }: { sub: Subscription }) {
+  return (
+    <div className="flex items-center gap-3">
+      <Badge variant={STATUS_BADGE[sub.status] ?? 'secondary'}>
+        {STATUS_LABEL[sub.status] ?? sub.status}
+      </Badge>
+      {(sub.status === 'ACTIVE' || sub.status === 'TRIALING') && sub.currentPeriodEnd && (
+        <span className="text-xs text-muted-foreground">
+          {sub.status === 'TRIALING' ? 'Trial ends' : 'Renews'}{' '}
+          {new Date(sub.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+      )}
+    </div>
+  );
+}
+
+interface PageProps {
+  searchParams: Promise<{ upgraded?: string; cancelled?: string }>;
+}
+
+export default async function SettingsPage({ searchParams }: PageProps) {
   const session = await getSession();
   if (!session) return null;
 
-  const [tenant, vehiclesResult, usersResult] = await Promise.all([
+  const params = await searchParams;
+
+  const [tenant, vehiclesResult, usersResult, subscription] = await Promise.all([
     getTenant(session.tenantId, session.token).catch(() => null),
     getVehicles(session.token, session.tenantId, { limit: 1 }).catch(() => ({ total: 0 })),
     getUsers(session.token, session.tenantId).catch(() => ({ data: [] as any[] })),
+    getSubscription(session.token, session.tenantId),
   ]);
 
   const plan = tenant?.plan ?? 'STARTER';
@@ -99,8 +139,23 @@ export default async function SettingsPage() {
     plan === 'STARTER' ? true : p.key === 'PRO',
   );
 
+  const isActiveSub = subscription?.status === 'ACTIVE' || subscription?.status === 'TRIALING';
+
   return (
     <div className="mx-auto max-w-2xl space-y-8">
+      {params.upgraded === 'true' && (
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+          <p className="text-sm font-medium text-emerald-800">Your plan has been upgraded. Welcome to {PLAN_LABELS[plan] ?? plan}!</p>
+        </div>
+      )}
+      {params.cancelled === 'true' && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+          <p className="text-sm font-medium text-amber-800">Your subscription has been cancelled. You&apos;ll retain access until the current period ends.</p>
+        </div>
+      )}
+
       {/* Account settings */}
       <div>
         <h1 className="mb-4 text-xl font-bold tracking-tight text-foreground">Settings</h1>
@@ -129,14 +184,22 @@ export default async function SettingsPage() {
         </div>
 
         <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Current plan</p>
               <div className="mt-1 flex items-center gap-2">
                 <p className="text-lg font-bold text-foreground">{PLAN_LABELS[plan] ?? plan}</p>
                 <Badge variant={PLAN_BADGE[plan] ?? 'secondary'}>{PLAN_LABELS[plan] ?? plan}</Badge>
               </div>
+              {subscription && (
+                <div className="mt-1.5">
+                  <SubscriptionStatus sub={subscription} />
+                </div>
+              )}
             </div>
+            {isActiveSub && subscription?.gateway === 'STRIPE' && (
+              <CancelSubscriptionButton />
+            )}
           </div>
 
           <div className="space-y-4 border-t pt-4">
@@ -166,7 +229,10 @@ export default async function SettingsPage() {
                 <div className="mb-3 flex items-start justify-between">
                   <div>
                     <p className="font-semibold text-foreground">{p.name}</p>
-                    <p className="text-2xl font-bold text-foreground">{p.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {p.price}
+                      <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                    </p>
                   </div>
                   {p.key === 'PRO' && (
                     <Badge variant="success" className="text-xs">Best Value</Badge>
@@ -180,19 +246,10 @@ export default async function SettingsPage() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={`mailto:support@autonova.io?subject=Upgrade to ${p.name}&body=Hi, I'd like to upgrade my AutoNova plan to ${p.name}.`}
-                  className="block w-full rounded-lg border border-primary bg-primary px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-primary/90"
-                >
-                  Upgrade to {p.name}
-                </a>
+                <UpgradeButton plan={p.key} label={p.name} />
               </div>
             ))}
           </div>
-
-          <p className="mt-3 text-xs text-muted-foreground text-center">
-            Contact <a href="mailto:support@autonova.io" className="text-primary hover:underline">support@autonova.io</a> to upgrade your plan.
-          </p>
         </div>
       )}
     </div>

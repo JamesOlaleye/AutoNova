@@ -23,4 +23,5 @@ export interface SubscriptionResponse {
   status: SubscriptionStatus;
   gateway: PaymentGateway;
   currentPeriodEnd: Date;
+  checkoutUrl?: string;
 }

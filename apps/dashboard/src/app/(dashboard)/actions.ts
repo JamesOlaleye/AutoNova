@@ -6,6 +6,8 @@ import { createVehicle, updateVehicle, uploadVehicleImage, deleteVehicleImage } 
 import { updateLead } from '@/lib/api/leads';
 import { createOrder, updateOrder, uploadOrderDocument, deleteOrderDocument } from '@/lib/api/orders';
 import { updateUser, deleteUser, changePassword } from '@/lib/api/users';
+import { createSubscription, cancelSubscription } from '@/lib/api/payments';
+import { getTenant } from '@/lib/api/tenants';
 import { setSession, getSession, clearSession } from '@/lib/session';
 import { ApiError } from '@/lib/api';
 import { createVehicleSchema } from '@/lib/schemas/vehicle.schema';
@@ -448,4 +450,63 @@ export async function changePasswordAction(
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Failed to change password. Please try again.' };
   }
+}
+
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export async function upgradeSubscriptionAction(
+  _prevState: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const plan = formData.get('plan') as string;
+  if (!plan) return { error: 'No plan selected' };
+
+  let tenant: Awaited<ReturnType<typeof getTenant>>;
+  try {
+    tenant = await getTenant(session.tenantId, session.token);
+  } catch {
+    return { error: 'Failed to fetch account details' };
+  }
+
+  const gateway = tenant.country === 'NG' ? 'PAYSTACK' : 'STRIPE';
+  const currency = tenant.currency ?? 'USD';
+
+  let checkoutUrl: string | undefined;
+  try {
+    const result = await createSubscription(session.token, session.tenantId, plan, tenant.email, gateway);
+    checkoutUrl = result.checkoutUrl;
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to start upgrade. Please try again.' };
+  }
+
+  if (checkoutUrl) redirect(checkoutUrl);
+  // Paystack or stub — redirect back to settings
+  redirect('/settings?upgraded=true');
+}
+
+export async function cancelSubscriptionAction(): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  let tenant: Awaited<ReturnType<typeof getTenant>>;
+  try {
+    tenant = await getTenant(session.tenantId, session.token);
+  } catch {
+    return { error: 'Failed to fetch account details' };
+  }
+
+  const gateway = tenant.country === 'NG' ? 'PAYSTACK' : 'STRIPE';
+
+  try {
+    await cancelSubscription(session.token, session.tenantId, gateway);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to cancel subscription. Please try again.' };
+  }
+
+  redirect('/settings?cancelled=true');
 }
