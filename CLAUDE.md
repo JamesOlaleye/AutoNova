@@ -376,8 +376,8 @@ Resend email + Twilio SMS wired; Cloudinary media upload; lead detail, image upl
 ### Phase 3 — Monetization & CRM Depth
 
 #### Monetization
-- [ ] Stripe subscription creation (payments-service) — needs STRIPE_SECRET_KEY + Price IDs
-- [ ] Paystack subscription creation — needs PAYSTACK_SECRET_KEY + plan codes
+- [x] Stripe subscription creation (payments-service) — needs STRIPE_SECRET_KEY + Price IDs
+- [x] Paystack subscription creation — needs PAYSTACK_SECRET_KEY + plan codes
 - [x] Payments DB entity (track active subscriptions) — `subscriptions` table in payments-service
 - [x] Enforce tier limits in tenants-service (listing count, staff count) — 402 on breach
 - [ ] Billing portal links for dealers — needs Stripe Customer Portal / Paystack equivalent
