@@ -20,6 +20,12 @@ const STRIPE_PRICE_IDS: Record<string, string | undefined> = {
   PRO: process.env.STRIPE_PRICE_PRO_MONTHLY,
 };
 
+const PAYSTACK_PLAN_CODES: Record<string, string | undefined> = {
+  STARTER: process.env.PAYSTACK_PLAN_STARTER_MONTHLY,
+  GROWTH: process.env.PAYSTACK_PLAN_GROWTH_MONTHLY,
+  PRO: process.env.PAYSTACK_PLAN_PRO_MONTHLY,
+};
+
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
@@ -68,6 +74,11 @@ export class PaymentsService {
       }
     }
 
+    // Paystack: server-side disable requires the subscription's email_token (sent to customer on creation).
+    // We mark cancelled in our DB — Paystack stops charging at end of current period automatically
+    // when the subscription is not renewed. TODO: store email_token from subscription.create to enable
+    // immediate Paystack server-side disable via POST /subscription/disable.
+
     sub.status = 'CANCELLED';
     sub.cancelledAt = new Date();
     await this.subscriptionRepo.save(sub);
@@ -98,7 +109,7 @@ export class PaymentsService {
         await this.upsertFromStripe(event.data.object as Stripe.Subscription);
         break;
       case 'customer.subscription.deleted':
-        await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        await this.handleStripeSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
     }
 
@@ -118,19 +129,23 @@ export class PaymentsService {
     const parsed = JSON.parse(payload);
     this.logger.log(`[PAYSTACK WEBHOOK] ${parsed?.event}`);
 
-    if (parsed?.event === 'subscription.disable') {
-      const customerId = parsed?.data?.customer?.id;
-      if (customerId) {
-        await this.subscriptionRepo.update(
-          { gatewayCustomerId: String(customerId) },
-          { status: 'CANCELLED', cancelledAt: new Date() },
-        );
-      }
+    switch (parsed?.event) {
+      case 'charge.success':
+        // Only handle if this charge is tied to a subscription plan
+        if (parsed.data?.plan) await this.handlePaystackChargeSuccess(parsed.data);
+        break;
+      case 'subscription.create':
+        await this.handlePaystackSubscriptionCreate(parsed.data);
+        break;
+      case 'subscription.disable':
+        await this.handlePaystackSubscriptionDisable(parsed.data);
+        break;
     }
+
     return { received: true };
   }
 
-  // ─── Private helpers ─────────────────────────────────────────────────────────
+  // ─── Stripe helpers ───────────────────────────────────────────────────────────
 
   private isStripeConfigured(): boolean {
     const key = process.env.STRIPE_SECRET_KEY ?? '';
@@ -151,10 +166,8 @@ export class PaymentsService {
       });
     }
 
-    // Create or retrieve Stripe Customer
     const customerId = await this.getOrCreateStripeCustomer(payload.email, payload.tenantId, payload.plan);
 
-    // Create Checkout Session
     const session = await this.stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -188,26 +201,7 @@ export class PaymentsService {
     };
   }
 
-  private async paystackCreateSubscription(payload: CreateSubscriptionPayload): Promise<SubscriptionResponse> {
-    this.logger.log(`[PAYSTACK] Creating ${payload.plan} subscription for tenant=${payload.tenantId}`);
-    return this.trialStub(payload, 'PAYSTACK');
-  }
-
-  private async trialStub(payload: CreateSubscriptionPayload, gateway: 'STRIPE' | 'PAYSTACK'): Promise<SubscriptionResponse> {
-    const periodEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-    const sub = await this.upsertSubscription({
-      tenantId: payload.tenantId,
-      plan: payload.plan,
-      status: 'TRIALING',
-      gateway,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: periodEnd,
-    });
-    return { id: sub.id, tenantId: sub.tenantId, plan: sub.plan as any, status: 'TRIALING', gateway, currentPeriodEnd: periodEnd };
-  }
-
   private async getOrCreateStripeCustomer(email: string, tenantId: string, plan: string): Promise<string> {
-    // Search by email first to avoid duplicate customers
     const existing = await this.stripe.customers.list({ email, limit: 1 });
     if (existing.data.length > 0) {
       const customer = existing.data[0];
@@ -239,7 +233,7 @@ export class PaymentsService {
     this.logger.log(`[STRIPE] Checkout completed — tenant=${tenantId} activated on ${plan}`);
   }
 
-  private async handleSubscriptionDeleted(stripeSub: Stripe.Subscription): Promise<void> {
+  private async handleStripeSubscriptionDeleted(stripeSub: Stripe.Subscription): Promise<void> {
     await this.subscriptionRepo.update(
       { gatewaySubscriptionId: stripeSub.id },
       { status: 'CANCELLED', cancelledAt: new Date() },
@@ -268,6 +262,174 @@ export class PaymentsService {
       currentPeriodStart: new Date(stripeSub.current_period_start * 1000),
       currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
     });
+  }
+
+  // ─── Paystack helpers ─────────────────────────────────────────────────────────
+
+  private isPaystackConfigured(): boolean {
+    const key = process.env.PAYSTACK_SECRET_KEY ?? '';
+    // Real Paystack keys are ~50 chars: sk_test_xxxxxxxx... or sk_live_xxxxxxxx...
+    return key.startsWith('sk_') && key.length > 20;
+  }
+
+  private async paystackCreateSubscription(payload: CreateSubscriptionPayload): Promise<SubscriptionResponse> {
+    if (!this.isPaystackConfigured()) {
+      this.logger.warn('[PAYSTACK] Secret key not configured — returning trial stub');
+      return this.trialStub(payload, 'PAYSTACK');
+    }
+
+    const planCode = PAYSTACK_PLAN_CODES[payload.plan];
+    if (!planCode || planCode.startsWith('PLN_placeholder')) {
+      throw new RpcException({
+        message: `Paystack plan not configured for ${payload.plan}. Add PAYSTACK_PLAN_${payload.plan}_MONTHLY to .env.`,
+        statusCode: 500,
+      });
+    }
+
+    // Fetch the plan's configured amount so the first charge matches the plan
+    const amount = await this.fetchPaystackPlanAmount(planCode);
+
+    const res = await fetch('https://api.paystack.co/transaction/initialize', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: payload.email,
+        amount,
+        plan: planCode,
+        callback_url: process.env.PAYSTACK_SUCCESS_URL ?? 'http://localhost:3101/settings?upgraded=true',
+        metadata: { tenantId: payload.tenantId, plan: payload.plan },
+      }),
+    });
+
+    const json = await res.json() as any;
+    if (!json.status || !json.data?.authorization_url) {
+      this.logger.error(`[PAYSTACK] Initialize failed: ${json.message}`);
+      throw new RpcException({ message: json.message ?? 'Paystack initialization failed', statusCode: 502 });
+    }
+
+    this.logger.log(`[PAYSTACK] Checkout initialized for tenant=${payload.tenantId} plan=${payload.plan}`);
+
+    const sub = await this.upsertSubscription({
+      tenantId: payload.tenantId,
+      plan: payload.plan,
+      status: 'TRIALING',
+      gateway: 'PAYSTACK',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    });
+
+    return {
+      id: sub.id,
+      tenantId: sub.tenantId,
+      plan: sub.plan as any,
+      status: 'TRIALING',
+      gateway: 'PAYSTACK',
+      currentPeriodEnd: sub.currentPeriodEnd,
+      checkoutUrl: json.data.authorization_url,
+    };
+  }
+
+  private async fetchPaystackPlanAmount(planCode: string): Promise<number> {
+    try {
+      const res = await fetch(`https://api.paystack.co/plan/${planCode}`, {
+        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+      });
+      const data = await res.json() as any;
+      return data.data?.amount ?? 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private async handlePaystackChargeSuccess(data: any): Promise<void> {
+    const metadata = data.metadata ?? {};
+    const tenantId = metadata.tenantId;
+    const plan = metadata.plan;
+
+    if (!tenantId || !plan) {
+      this.logger.warn('[PAYSTACK] charge.success missing tenantId/plan in metadata');
+      return;
+    }
+
+    // customer_code (CUS_xxx) is the stable identifier; fall back to numeric id
+    const customerCode = data.customer?.customer_code ?? String(data.customer?.id ?? '');
+    // next_payment_date comes from plan_object on the transaction; fall back to +30 days
+    const periodEnd = data.plan_object?.next_payment_date
+      ? new Date(data.plan_object.next_payment_date)
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await this.upsertSubscription({
+      tenantId,
+      plan,
+      status: 'ACTIVE',
+      gateway: 'PAYSTACK',
+      gatewayCustomerId: customerCode,
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: periodEnd,
+    });
+
+    await this.updateTenantPlan(tenantId, plan);
+    this.logger.log(`[PAYSTACK] Charge success — tenant=${tenantId} activated on ${plan}`);
+  }
+
+  private async handlePaystackSubscriptionCreate(data: any): Promise<void> {
+    // Fires after charge.success; use it to attach the subscription code (SUB_xxx) to the record
+    const subscriptionCode = data.subscription_code;
+    const customerCode = data.customer?.customer_code ?? String(data.customer?.id ?? '');
+    const nextPaymentDate = data.next_payment_date ? new Date(data.next_payment_date) : undefined;
+
+    if (!subscriptionCode || !customerCode) return;
+
+    await this.subscriptionRepo.update(
+      { gatewayCustomerId: customerCode, gateway: 'PAYSTACK' },
+      {
+        gatewaySubscriptionId: subscriptionCode,
+        ...(nextPaymentDate ? { currentPeriodEnd: nextPaymentDate } : {}),
+      },
+    );
+
+    this.logger.log(`[PAYSTACK] Subscription created — code=${subscriptionCode} customer=${customerCode}`);
+  }
+
+  private async handlePaystackSubscriptionDisable(data: any): Promise<void> {
+    const subscriptionCode = data.subscription_code;
+    const customerCode = data.customer?.customer_code ?? String(data.customer?.id ?? '');
+
+    // Try by subscription code first (most specific), then by customer code
+    let sub: Subscription | null = null;
+    if (subscriptionCode) {
+      sub = await this.subscriptionRepo.findOne({ where: { gatewaySubscriptionId: subscriptionCode } });
+    }
+    if (!sub && customerCode) {
+      sub = await this.subscriptionRepo.findOne({ where: { gatewayCustomerId: customerCode, gateway: 'PAYSTACK' } });
+    }
+
+    if (sub) {
+      const tenantId = sub.tenantId;
+      sub.status = 'CANCELLED';
+      sub.cancelledAt = new Date();
+      await this.subscriptionRepo.save(sub);
+      await this.updateTenantPlan(tenantId, 'STARTER');
+      this.logger.log(`[PAYSTACK] Subscription disabled — tenant=${tenantId} reverted to STARTER`);
+    }
+  }
+
+  // ─── Shared helpers ───────────────────────────────────────────────────────────
+
+  private async trialStub(payload: CreateSubscriptionPayload, gateway: 'STRIPE' | 'PAYSTACK'): Promise<SubscriptionResponse> {
+    const periodEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    const sub = await this.upsertSubscription({
+      tenantId: payload.tenantId,
+      plan: payload.plan,
+      status: 'TRIALING',
+      gateway,
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: periodEnd,
+    });
+    return { id: sub.id, tenantId: sub.tenantId, plan: sub.plan as any, status: 'TRIALING', gateway, currentPeriodEnd: periodEnd };
   }
 
   private async upsertSubscription(data: Partial<Subscription>): Promise<Subscription> {

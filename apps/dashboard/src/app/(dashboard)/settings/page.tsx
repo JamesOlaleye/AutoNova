@@ -197,7 +197,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
                 </div>
               )}
             </div>
-            {isActiveSub && subscription?.gateway === 'STRIPE' && (
+            {isActiveSub && subscription && (
               <CancelSubscriptionButton />
             )}
           </div>
