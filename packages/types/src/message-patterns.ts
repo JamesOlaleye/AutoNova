@@ -87,4 +87,5 @@ export const PAYMENT_PATTERNS = {
   CREATE_PORTAL_SESSION: 'payments.createPortalSession',
   HANDLE_STRIPE_WEBHOOK: 'payments.handleStripeWebhook',
   HANDLE_PAYSTACK_WEBHOOK: 'payments.handlePaystackWebhook',
+  TENANT_CREATED: 'payments.tenantCreated',
 } as const;

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RpcException } from '@nestjs/microservices';
-import { CreateTenantPayload, UpdateTenantPayload, TenantPlanLimits } from '@autonova/types';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { CreateTenantPayload, UpdateTenantPayload, TenantPlanLimits, SERVICES, PAYMENT_PATTERNS } from '@autonova/types';
 import { Tenant } from './entities/tenant.entity';
 
 const PLAN_LIMITS: Record<string, { listingLimit: number; staffLimit: number }> = {
@@ -13,7 +13,12 @@ const PLAN_LIMITS: Record<string, { listingLimit: number; staffLimit: number }> 
 
 @Injectable()
 export class TenantsService {
-  constructor(@InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>) {}
+  private readonly logger = new Logger(TenantsService.name);
+
+  constructor(
+    @InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>,
+    @Inject(SERVICES.PAYMENTS) private readonly paymentsClient: ClientProxy,
+  ) {}
 
   async create(payload: CreateTenantPayload): Promise<Tenant> {
     const existing = await this.tenantRepo.findOne({ where: { slug: payload.slug } });
@@ -21,7 +26,17 @@ export class TenantsService {
       throw new RpcException({ message: `Slug "${payload.slug}" is already taken`, statusCode: 409 });
     }
     const tenant = this.tenantRepo.create({ ...payload, plan: payload.plan || 'STARTER' });
-    return this.tenantRepo.save(tenant);
+    const saved = await this.tenantRepo.save(tenant);
+
+    // Fire-and-forget — start the 30-day free trial in payments-service
+    this.paymentsClient
+      .emit(PAYMENT_PATTERNS.TENANT_CREATED, { tenantId: saved.id, email: saved.email })
+      .subscribe({
+        error: (err) =>
+          this.logger.error(`Failed to emit TENANT_CREATED for tenant ${saved.id}: ${err?.message}`),
+      });
+
+    return saved;
   }
 
   async findById(id: string): Promise<Tenant> {

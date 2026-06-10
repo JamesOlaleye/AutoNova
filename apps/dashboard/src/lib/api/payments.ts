@@ -24,12 +24,13 @@ export async function createSubscription(
   plan: string,
   email: string,
   gateway: 'STRIPE' | 'PAYSTACK',
+  currency: string,
 ): Promise<Subscription> {
   return apiRequest<Subscription>('/payments/subscribe', {
     method: 'POST',
     token,
     tenantId,
-    body: { plan, email, gateway },
+    body: { plan, email, gateway, currency },
   });
 }
 
@@ -53,6 +54,6 @@ export async function cancelSubscription(
     method: 'POST',
     token,
     tenantId,
-    body: { tenantId, gateway },
+    body: { gateway },
   });
 }

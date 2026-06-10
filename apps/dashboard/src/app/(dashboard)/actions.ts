@@ -476,7 +476,7 @@ export async function upgradeSubscriptionAction(
 
   let checkoutUrl: string | undefined;
   try {
-    const result = await createSubscription(session.token, session.tenantId, plan, tenant.email, gateway);
+    const result = await createSubscription(session.token, session.tenantId, plan, tenant.email, gateway, currency);
     checkoutUrl = result.checkoutUrl;
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };

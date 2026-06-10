@@ -166,7 +166,7 @@ export class PaymentsService {
 
   private isStripeConfigured(): boolean {
     const key = process.env.STRIPE_SECRET_KEY ?? '';
-    return key.startsWith('sk_') && key.length > 10;
+    return key.startsWith('sk_') && key.length > 20;
   }
 
   private async stripeCreateSubscription(payload: CreateSubscriptionPayload): Promise<SubscriptionResponse> {
@@ -435,6 +435,23 @@ export class PaymentsService {
   }
 
   // ─── Shared helpers ───────────────────────────────────────────────────────────
+
+  async createTrialSubscription(tenantId: string): Promise<void> {
+    const existing = await this.subscriptionRepo.findOne({ where: { tenantId } });
+    if (existing) return; // idempotent — don't overwrite an already-upgraded subscription
+
+    await this.subscriptionRepo.save(
+      this.subscriptionRepo.create({
+        tenantId,
+        plan: 'STARTER',
+        status: 'TRIALING',
+        gateway: 'STRIPE',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      }),
+    );
+    this.logger.log(`[PAYMENTS] 30-day trial started for tenant=${tenantId}`);
+  }
 
   private async trialStub(payload: CreateSubscriptionPayload, gateway: 'STRIPE' | 'PAYSTACK'): Promise<SubscriptionResponse> {
     const periodEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);

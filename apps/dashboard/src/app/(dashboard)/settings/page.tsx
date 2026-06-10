@@ -15,7 +15,7 @@ import { BillingPortalButton } from './_components/billing-portal-button';
 export const metadata: Metadata = { title: 'Settings' };
 
 const PLAN_LABELS: Record<string, string> = {
-  STARTER: 'Starter',
+  STARTER: 'Free Trial',
   GROWTH: 'Growth',
   PRO: 'Pro',
 };
@@ -195,10 +195,10 @@ export default async function SettingsPage({ searchParams }: PageProps) {
               {subscription && (
                 <div className="mt-1.5 space-y-1.5">
                   <SubscriptionStatus sub={subscription} />
-                  {isActiveSub && subscription.gateway === 'STRIPE' && (
+                  {subscription.status === 'ACTIVE' && subscription.gateway === 'STRIPE' && (
                     <BillingPortalButton />
                   )}
-                  {isActiveSub && subscription.gateway === 'PAYSTACK' && (
+                  {subscription.status === 'ACTIVE' && subscription.gateway === 'PAYSTACK' && (
                     <p className="text-xs text-muted-foreground">
                       Invoices and receipts are sent to your billing email by Paystack.
                     </p>
@@ -206,7 +206,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
                 </div>
               )}
             </div>
-            {isActiveSub && subscription && (
+            {subscription?.status === 'ACTIVE' && (
               <CancelSubscriptionButton />
             )}
           </div>

@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import { getTenant } from '@/lib/api/tenants';
+import { getSubscription } from '@/lib/api/payments';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { TrialBanner } from '@/components/common/trial-banner';
 import { StoreProvider } from '@/store/store-provider';
 import { Toaster } from '@/components/common/toaster';
 
@@ -14,13 +16,22 @@ export default async function DashboardLayout({
   const session = await getSession();
   if (!session) redirect('/login');
 
-  let dealerName: string | null = null;
-  try {
-    const tenant = await getTenant(session.tenantId, session.token);
-    dealerName = tenant.name;
-  } catch {
-    // Graceful degradation — sidebar still renders without the name
-  }
+  const [tenantResult, subscription] = await Promise.all([
+    getTenant(session.tenantId, session.token).catch(() => null),
+    getSubscription(session.token, session.tenantId),
+  ]);
+
+  const dealerName = tenantResult?.name ?? null;
+
+  const trialDaysLeft =
+    subscription?.status === 'TRIALING' && subscription.currentPeriodEnd
+      ? Math.ceil(
+          (new Date(subscription.currentPeriodEnd).getTime() - Date.now()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : null;
+
+  const showTrialBanner = trialDaysLeft !== null && trialDaysLeft <= 7;
 
   return (
     <StoreProvider user={session.user} tenantId={session.tenantId}>
@@ -36,6 +47,7 @@ export default async function DashboardLayout({
         <Sidebar dealerName={dealerName} />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <Header />
+          {showTrialBanner && <TrialBanner daysLeft={trialDaysLeft} />}
           <main
             id="main-content"
             className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"

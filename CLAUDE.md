@@ -32,13 +32,15 @@ reference use case when making product decisions.
 - James charges dealers a monthly subscription (Stripe for UK/Global, Paystack for Nigeria/Africa)
 - Revenue = recurring subscriptions + optional add-ons (SMS credits, premium listings, etc.)
 
-### Pricing Tiers (planned)
+### Pricing Tiers
 
-| Tier    | Price/mo | Limits                              |
-|---------|----------|-------------------------------------|
-| Starter | $49      | 1-2 staff, 30 listings              |
-| Growth  | $149     | 10 staff, 200 listings, analytics   |
-| Pro     | $349     | Unlimited, API access, custom domain|
+| Tier    | Price/mo | Limits                                      | Notes |
+|---------|----------|---------------------------------------------|-------|
+| Starter | Free     | 1-2 staff, 30 listings — 30-day trial       | Auto-assigned on signup (TRIALING in DB). No Stripe/Paystack product. Prompt to upgrade after 30 days. |
+| Growth  | $149     | 10 staff, 200 listings, analytics           | First paid tier. |
+| Pro     | $349     | Unlimited everything, API access, custom domain | Top tier. |
+
+**Why Starter is free:** $49 was too low-margin and added support overhead. Free trials lower the signup barrier and convert better than a low-price entry tier. `STRIPE_PRICE_STARTER_MONTHLY` env var is a no-op and will be removed in a future cleanup.
 
 ### Target Markets
 
@@ -376,12 +378,14 @@ Resend email + Twilio SMS wired; Cloudinary media upload; lead detail, image upl
 ### Phase 3 — Monetization & CRM Depth
 
 #### Monetization
-- [x] Stripe subscription creation (payments-service) — needs STRIPE_SECRET_KEY + Price IDs
-- [x] Paystack subscription creation — needs PAYSTACK_SECRET_KEY + plan codes
+- [x] Stripe subscription creation (payments-service) — Growth + Pro only; Starter is TRIALING (no Stripe product)
+- [x] Paystack subscription creation — Growth + Pro only; needs PAYSTACK_SECRET_KEY + plan codes
 - [x] Payments DB entity (track active subscriptions) — `subscriptions` table in payments-service
 - [x] Enforce tier limits in tenants-service (listing count, staff count) — 402 on breach
 - [x] Billing portal links for dealers — Stripe Customer Portal session; Paystack shows billing-by-email note
 - [x] Platform admin: dealer subscription overview — `apps/admin` fully built (port 3102)
+- [x] Auto-TRIALING on tenant signup — tenants-service emits `TENANT_CREATED` (fire-and-forget) → payments-service `@EventPattern` creates 30-day TRIALING record
+- [x] Trial expiry prompt — banner in dashboard layout: amber when ≤7 days left, red when expired; links to /settings
 
 #### Storefront
 - [x] Price range filter — `minPrice`/`maxPrice` inputs → `GET /vehicles`

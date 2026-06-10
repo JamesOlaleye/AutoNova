@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern, EventPattern, Payload } from '@nestjs/microservices';
 import {
   PAYMENT_PATTERNS,
   CreateSubscriptionPayload,
@@ -39,5 +39,10 @@ export class PaymentsController {
   @MessagePattern(PAYMENT_PATTERNS.HANDLE_PAYSTACK_WEBHOOK)
   handlePaystackWebhook(@Payload() payload: { payload: any; signature: string }) {
     return this.paymentsService.handlePaystackWebhook(payload.payload, payload.signature);
+  }
+
+  @EventPattern(PAYMENT_PATTERNS.TENANT_CREATED)
+  handleTenantCreated(@Payload() payload: { tenantId: string; email: string }) {
+    return this.paymentsService.createTrialSubscription(payload.tenantId);
   }
 }
