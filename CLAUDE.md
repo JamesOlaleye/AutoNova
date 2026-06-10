@@ -376,29 +376,29 @@ Resend email + Twilio SMS wired; Cloudinary media upload; lead detail, image upl
 ### Phase 3 — Monetization & CRM Depth
 
 #### Monetization
-- [ ] Stripe subscription creation (payments-service)
-- [ ] Paystack subscription creation
-- [ ] Payments DB entity (track active subscriptions)
-- [ ] Enforce tier limits in tenants-service (listing count, staff count)
-- [ ] Billing portal links for dealers
-- [ ] Platform admin: dealer subscription overview
+- [ ] Stripe subscription creation (payments-service) — needs STRIPE_SECRET_KEY + Price IDs
+- [ ] Paystack subscription creation — needs PAYSTACK_SECRET_KEY + plan codes
+- [x] Payments DB entity (track active subscriptions) — `subscriptions` table in payments-service
+- [x] Enforce tier limits in tenants-service (listing count, staff count) — 402 on breach
+- [ ] Billing portal links for dealers — needs Stripe Customer Portal / Paystack equivalent
+- [x] Platform admin: dealer subscription overview — `apps/admin` fully built (port 3102)
 
 #### Storefront
-- [ ] Price range filter — `minPrice`/`maxPrice` inputs → `GET /vehicles` (backend already supports these)
-- [ ] Filter sidebar on desktop (`lg+`) — move filters from top bar into fixed left sidebar; top bar stays on mobile
-- [ ] Larger vehicle photos on cards — increase `VehicleCard` image height from `h-48` to `h-56`/`h-64`
-- [ ] Dealer info / about page (`/about`) — hours, map, contact, WhatsApp; fetches `GET /api/v1/tenants/public/:slug`
-- [ ] Replace white-label env vars with `GET /api/v1/tenants/public/:slug` (add public endpoint, no JWT)
-- [ ] Vehicle comparison — side-by-side up to 3 vehicles (client-side, URL params)
-- [ ] Financing calculator — client-side only (price, down payment, rate, term → monthly payment)
-- [ ] Sitemap (`app/sitemap.ts`) — dynamic, AVAILABLE vehicles, ISR revalidation
-- [ ] Wishlist / saved vehicles (localStorage for guests)
+- [x] Price range filter — `minPrice`/`maxPrice` inputs → `GET /vehicles`
+- [x] Filter sidebar on desktop (`lg+`) — fixed left sidebar; top bar on mobile
+- [x] Larger vehicle photos on cards — `VehicleCard` image height increased
+- [x] Dealer info / about page (`/about`) — hours, map, contact, WhatsApp
+- [x] Replace white-label env vars with `GET /api/v1/tenants/public/:slug`
+- [x] Vehicle comparison — side-by-side up to 3 vehicles (client-side, URL params)
+- [x] Financing calculator — client-side only
+- [x] Sitemap (`app/sitemap.ts`) — dynamic, AVAILABLE vehicles, ISR revalidation
+- [x] Wishlist / saved vehicles (localStorage for guests)
 
 #### Dashboard
-- [ ] Notifications center — bell icon, poll `GET /leads?status=NEW&limit=10` or SSE
-- [ ] Customer profiles — deduplicate leads by email, show all interactions
-- [ ] Document uploads (contracts, titles) — attach files to orders via media-service
-- [ ] Password change — staff can change own password from settings
+- [x] Notifications center — bell icon, polls new leads
+- [x] Customer profiles — deduplicated by email, shows all interactions
+- [x] Document uploads (contracts, titles) — attached to orders via media-service
+- [x] Password change — staff can change own password from settings
 
 ---
 
