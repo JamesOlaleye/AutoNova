@@ -61,6 +61,23 @@ export class PaymentsService {
     };
   }
 
+  async createPortalSession(tenantId: string): Promise<{ url: string } | null> {
+    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } });
+    if (!sub || sub.gateway !== 'STRIPE' || !sub.gatewayCustomerId) return null;
+    if (!this.isStripeConfigured()) return null;
+
+    try {
+      const session = await this.stripe.billingPortal.sessions.create({
+        customer: sub.gatewayCustomerId,
+        return_url: process.env.STRIPE_PORTAL_RETURN_URL ?? 'http://localhost:3101/settings',
+      });
+      return { url: session.url };
+    } catch (err: any) {
+      this.logger.error(`[STRIPE] Portal session failed for tenant=${tenantId}: ${err.message}`);
+      throw new RpcException({ message: 'Could not open billing portal. Ensure the Stripe Customer Portal is configured in your Stripe dashboard.', statusCode: 502 });
+    }
+  }
+
   async cancelSubscription(payload: CancelSubscriptionPayload): Promise<{ cancelled: boolean }> {
     const sub = await this.subscriptionRepo.findOne({ where: { tenantId: payload.tenantId } });
     if (!sub) return { cancelled: true };

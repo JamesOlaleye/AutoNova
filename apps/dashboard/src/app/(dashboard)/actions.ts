@@ -6,7 +6,7 @@ import { createVehicle, updateVehicle, uploadVehicleImage, deleteVehicleImage } 
 import { updateLead } from '@/lib/api/leads';
 import { createOrder, updateOrder, uploadOrderDocument, deleteOrderDocument } from '@/lib/api/orders';
 import { updateUser, deleteUser, changePassword } from '@/lib/api/users';
-import { createSubscription, cancelSubscription } from '@/lib/api/payments';
+import { createSubscription, cancelSubscription, createPortalSession } from '@/lib/api/payments';
 import { getTenant } from '@/lib/api/tenants';
 import { setSession, getSession, clearSession } from '@/lib/session';
 import { ApiError } from '@/lib/api';
@@ -486,6 +486,22 @@ export async function upgradeSubscriptionAction(
   if (checkoutUrl) redirect(checkoutUrl);
   // Paystack or stub — redirect back to settings
   redirect('/settings?upgraded=true');
+}
+
+export async function openBillingPortalAction(): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  let result: { url: string } | null;
+  try {
+    result = await createPortalSession(session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Could not open billing portal. Please try again.' };
+  }
+
+  if (!result?.url) return { error: 'Billing portal is not available for your payment method.' };
+  redirect(result.url);
 }
 
 export async function cancelSubscriptionAction(): Promise<{ error?: string }> {

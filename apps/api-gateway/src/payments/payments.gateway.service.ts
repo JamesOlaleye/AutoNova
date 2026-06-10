@@ -23,6 +23,10 @@ export class PaymentsGatewayService extends BaseGatewayService {
     return this.send(this.client, PAYMENT_PATTERNS.CANCEL_SUBSCRIPTION, { ...dto, tenantId });
   }
 
+  createPortalSession(tenantId: string) {
+    return this.send(this.client, PAYMENT_PATTERNS.CREATE_PORTAL_SESSION, { tenantId });
+  }
+
   handleStripeWebhook(rawBody: Buffer, signature: string) {
     return this.send(this.client, PAYMENT_PATTERNS.HANDLE_STRIPE_WEBHOOK, {
       payload: rawBody,

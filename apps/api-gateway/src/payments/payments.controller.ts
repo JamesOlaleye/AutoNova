@@ -44,6 +44,16 @@ export class PaymentsController {
     return this.paymentsService.cancelSubscription(body, tenantId);
   }
 
+  @Post('portal')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('DEALER_ADMIN', 'PLATFORM_ADMIN')
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Create a Stripe Customer Portal session — returns url to redirect the dealer to' })
+  @ApiResponse({ status: 200, description: 'Portal session URL, or null for non-Stripe tenants' })
+  createPortalSession(@TenantId() tenantId: string) {
+    return this.paymentsService.createPortalSession(tenantId);
+  }
+
   @Post('webhooks/stripe')
   @ApiOperation({ summary: 'Stripe webhook endpoint — do not call manually' })
   handleStripeWebhook(@Req() req: RawBodyRequest<any>) {

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { UpgradeButton } from './_components/upgrade-button';
 import { CancelSubscriptionButton } from './_components/cancel-subscription-button';
+import { BillingPortalButton } from './_components/billing-portal-button';
 
 export const metadata: Metadata = { title: 'Settings' };
 
@@ -192,8 +193,16 @@ export default async function SettingsPage({ searchParams }: PageProps) {
                 <Badge variant={PLAN_BADGE[plan] ?? 'secondary'}>{PLAN_LABELS[plan] ?? plan}</Badge>
               </div>
               {subscription && (
-                <div className="mt-1.5">
+                <div className="mt-1.5 space-y-1.5">
                   <SubscriptionStatus sub={subscription} />
+                  {isActiveSub && subscription.gateway === 'STRIPE' && (
+                    <BillingPortalButton />
+                  )}
+                  {isActiveSub && subscription.gateway === 'PAYSTACK' && (
+                    <p className="text-xs text-muted-foreground">
+                      Invoices and receipts are sent to your billing email by Paystack.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

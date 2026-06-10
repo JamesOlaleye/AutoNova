@@ -380,7 +380,7 @@ Resend email + Twilio SMS wired; Cloudinary media upload; lead detail, image upl
 - [x] Paystack subscription creation — needs PAYSTACK_SECRET_KEY + plan codes
 - [x] Payments DB entity (track active subscriptions) — `subscriptions` table in payments-service
 - [x] Enforce tier limits in tenants-service (listing count, staff count) — 402 on breach
-- [ ] Billing portal links for dealers — needs Stripe Customer Portal / Paystack equivalent
+- [x] Billing portal links for dealers — Stripe Customer Portal session; Paystack shows billing-by-email note
 - [x] Platform admin: dealer subscription overview — `apps/admin` fully built (port 3102)
 
 #### Storefront

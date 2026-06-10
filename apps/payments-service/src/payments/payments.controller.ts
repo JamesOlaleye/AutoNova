@@ -26,6 +26,11 @@ export class PaymentsController {
     return this.paymentsService.cancelSubscription(payload);
   }
 
+  @MessagePattern(PAYMENT_PATTERNS.CREATE_PORTAL_SESSION)
+  createPortalSession(@Payload() payload: { tenantId: string }) {
+    return this.paymentsService.createPortalSession(payload.tenantId);
+  }
+
   @MessagePattern(PAYMENT_PATTERNS.HANDLE_STRIPE_WEBHOOK)
   handleStripeWebhook(@Payload() payload: { payload: any; signature: string }) {
     return this.paymentsService.handleStripeWebhook(payload.payload, payload.signature);

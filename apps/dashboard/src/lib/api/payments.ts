@@ -33,6 +33,17 @@ export async function createSubscription(
   });
 }
 
+export async function createPortalSession(
+  token: string,
+  tenantId: string,
+): Promise<{ url: string } | null> {
+  return apiRequest<{ url: string } | null>('/payments/portal', {
+    method: 'POST',
+    token,
+    tenantId,
+  });
+}
+
 export async function cancelSubscription(
   token: string,
   tenantId: string,

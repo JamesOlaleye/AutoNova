@@ -84,6 +84,7 @@ export const PAYMENT_PATTERNS = {
   CREATE_SUBSCRIPTION: 'payments.createSubscription',
   CANCEL_SUBSCRIPTION: 'payments.cancelSubscription',
   GET_SUBSCRIPTION: 'payments.getSubscription',
+  CREATE_PORTAL_SESSION: 'payments.createPortalSession',
   HANDLE_STRIPE_WEBHOOK: 'payments.handleStripeWebhook',
   HANDLE_PAYSTACK_WEBHOOK: 'payments.handlePaystackWebhook',
 } as const;
