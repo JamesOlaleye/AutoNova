@@ -23,6 +23,10 @@ export class TenantsGatewayService extends BaseGatewayService {
     return this.send(this.client, TENANT_PATTERNS.GET_ALL, {});
   }
 
+  findPublic(slug: string) {
+    return this.send(this.client, TENANT_PATTERNS.FIND_PUBLIC, { slug });
+  }
+
   update(id: string, dto: UpdateTenantDto) {
     return this.send(this.client, TENANT_PATTERNS.UPDATE, { ...dto, id });
   }

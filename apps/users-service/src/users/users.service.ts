@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RpcException } from '@nestjs/microservices';
+import * as bcrypt from 'bcryptjs';
 import { CreateUserPayload, PaginatedResponse, UpdateUserPayload } from '@autonova/types';
 import { User } from './entities/user.entity';
 
@@ -58,6 +59,23 @@ export class UsersService {
     await this.userRepo.update({ id, tenantId }, updates);
     const updated = await this.findById(id, tenantId);
     return this.sanitize(updated);
+  }
+
+  async changePassword(payload: {
+    id: string;
+    tenantId: string;
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ message: string }> {
+    const user = await this.userRepo.findOne({ where: { id: payload.id, tenantId: payload.tenantId } });
+    if (!user) throw new RpcException({ message: 'User not found', statusCode: 404 });
+
+    const valid = await bcrypt.compare(payload.currentPassword, user.password);
+    if (!valid) throw new RpcException({ message: 'Current password is incorrect', statusCode: 400 });
+
+    const hashed = await bcrypt.hash(payload.newPassword, 12);
+    await this.userRepo.update({ id: payload.id, tenantId: payload.tenantId }, { password: hashed });
+    return { message: 'Password changed successfully' };
   }
 
   async remove(id: string, tenantId: string): Promise<{ message: string }> {

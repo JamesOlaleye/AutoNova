@@ -34,6 +34,20 @@ export async function updateUser(
   });
 }
 
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+  token: string,
+  tenantId: string,
+): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>('/users/me/change-password', {
+    method: 'POST',
+    body: { currentPassword, newPassword },
+    token,
+    tenantId,
+  });
+}
+
 export async function deleteUser(
   id: string,
   token: string,

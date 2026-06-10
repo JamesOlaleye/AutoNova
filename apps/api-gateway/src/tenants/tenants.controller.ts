@@ -40,6 +40,14 @@ export class TenantsController {
     return this.tenantsService.update(id, body);
   }
 
+  @Get('public/:slug')
+  @ApiOperation({ summary: 'Get public dealer profile by slug — no auth required' })
+  @ApiResponse({ status: 200, description: 'Public dealer info' })
+  @ApiResponse({ status: 404, description: 'Dealer not found' })
+  findPublic(@Param('slug') slug: string) {
+    return this.tenantsService.findPublic(slug);
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PLATFORM_ADMIN')

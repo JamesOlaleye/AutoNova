@@ -1,10 +1,14 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { Car, Gauge, Fuel, GitFork, Images } from 'lucide-react';
+import { Car, Gauge, Fuel, GitFork, Images, GitCompareArrows, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatMileage, vehicleSlug } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { useCompareStore } from '@/store/compare.store';
+import { useWishlistStore } from '@/store/wishlist.store';
 import type { Vehicle, VehicleCondition } from '@/types';
 
 const CONDITION_BADGE: Record<VehicleCondition, 'success' | 'info' | 'warning'> = {
@@ -24,6 +28,11 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const conditionVariant = CONDITION_BADGE[vehicle.condition] ?? 'info';
   const primaryImage = vehicle.images?.[0] ?? null;
   const imageCount = vehicle.images?.length ?? 0;
+  const { toggle, has, ids } = useCompareStore();
+  const { toggle: toggleWishlist, has: isWishlisted } = useWishlistStore();
+  const wishlisted = isWishlisted(vehicle.id);
+  const isComparing = has(vehicle.id);
+  const compareFull = ids.length >= 3 && !isComparing;
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5">
@@ -33,7 +42,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
         aria-label={`View ${vehicle.year} ${vehicle.make} ${vehicle.model}`}
         tabIndex={-1}
       >
-        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+        <div className="relative h-56 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
           {primaryImage ? (
             <Image
               src={primaryImage}
@@ -57,6 +66,21 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
               {CONDITION_LABEL[vehicle.condition]}
             </Badge>
           </div>
+
+          {/* Wishlist heart */}
+          <button
+            onClick={() => toggleWishlist(vehicle.id)}
+            aria-label={wishlisted ? 'Remove from saved vehicles' : 'Save vehicle'}
+            aria-pressed={wishlisted}
+            className={cn(
+              'absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors',
+              wishlisted
+                ? 'bg-red-500 text-white'
+                : 'bg-white/80 text-muted-foreground hover:bg-white hover:text-red-500',
+            )}
+          >
+            <Heart className={cn('h-4 w-4', wishlisted && 'fill-current')} aria-hidden="true" />
+          </button>
 
           {/* Photo count pill */}
           {imageCount > 1 && (
@@ -110,10 +134,25 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           </dl>
         </div>
 
-        <div className="mt-4 border-t pt-3">
-          <Button asChild variant="outline" size="sm" className="h-11 w-full sm:h-9">
+        <div className="mt-4 flex gap-2 border-t pt-3">
+          <Button asChild variant="outline" size="sm" className="h-11 flex-1 sm:h-9">
             <Link href={`/vehicles/${slug}`}>View Details</Link>
           </Button>
+          <button
+            onClick={() => toggle(vehicle.id)}
+            disabled={compareFull}
+            title={isComparing ? 'Remove from compare' : compareFull ? 'Compare list full (max 3)' : 'Add to compare'}
+            aria-pressed={isComparing}
+            className={cn(
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border text-sm transition-colors sm:h-9 sm:w-9',
+              isComparing
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border text-muted-foreground hover:border-primary hover:text-primary',
+              compareFull && 'opacity-40 cursor-not-allowed',
+            )}
+          >
+            <GitCompareArrows className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </article>

@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { LogOut, ChevronDown, Bell, Settings, Menu } from 'lucide-react';
+import { LogOut, ChevronDown, Settings, Menu } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useUiStore } from '@/store/ui.store';
 import { logout } from '@/app/(dashboard)/actions';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/common/notification-bell';
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -22,6 +23,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/staff/invite': 'Invite Staff',
   '/analytics': 'Analytics',
   '/settings': 'Settings',
+  '/settings/password': 'Change Password',
+  '/customers': 'Customer Profiles',
+  '/customers/': 'Customer Detail',
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -86,17 +90,7 @@ export function Header() {
 
       {/* Right — notification bell + user menu */}
       <div className="flex items-center gap-1">
-        {/* Notification bell */}
-        <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Notifications (no new notifications)"
-        >
-          <Bell className="h-4 w-4" aria-hidden="true" />
-          <span
-            className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-destructive"
-            aria-hidden="true"
-          />
-        </button>
+        <NotificationBell />
 
         {/* User menu */}
         <div className="relative">

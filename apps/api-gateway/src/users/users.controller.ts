@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtPayload } from '@autonova/types';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -9,6 +9,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersGatewayService } from './users.gateway.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('users')
 @ApiBearerAuth('JWT')
@@ -49,6 +50,14 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Updated user' })
   update(@Param('id') id: string, @Body() body: UpdateUserDto, @TenantId() tenantId: string) {
     return this.usersService.update(id, body, tenantId);
+  }
+
+  @Post('me/change-password')
+  @ApiOperation({ summary: 'Change own password' })
+  @ApiResponse({ status: 200, description: 'Password changed' })
+  @ApiResponse({ status: 400, description: 'Current password incorrect' })
+  changePassword(@Body() body: ChangePasswordDto, @CurrentUser() user: JwtPayload, @TenantId() tenantId: string) {
+    return this.usersService.changePassword(user.sub, body, tenantId);
   }
 
   @Delete(':id')

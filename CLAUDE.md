@@ -362,85 +362,43 @@ and converts it to a proper HTTP JSON response with correct status code.
 ## 7. Development Phases
 
 ### Phase 1 — Core Platform (complete ✓)
-**Goal: a working dealership website end-to-end**
-
-Backend (complete ✓):
-- [x] All 11 services boot cleanly (`yarn dev:backend`)
-- [x] SQL Server auto-provisioned via `createDatabaseConfig` + docker-compose init service
-- [x] api-gateway layered architecture: Controller → GatewayService → BaseGatewayService
-- [x] Global RpcExceptionFilter — all RPC errors map to correct HTTP responses
-- [x] All request bodies and query params are typed DTOs with class-validator
-- [x] Swagger UI at `http://localhost:3000/api/v1/swagger`
-- [x] Smoke tested: auth flow (register → login → refresh → logout)
-- [x] Smoke tested: tenant CRUD
-- [x] Smoke tested: vehicle CRUD (create, publish, search)
-- [x] Smoke tested: lead creation (public inquiry form)
-
-Frontend (`apps/dashboard`) — complete ✓:
-- [x] Tailwind CSS + design system configured
-- [x] Login page (httpOnly cookies, Server Actions)
-- [x] Dashboard home (KPI stats cards + recent activity)
-- [x] Inventory list + add vehicle form (Zod-validated)
-- [x] Leads list + inline status update with toast feedback
-- [x] Mobile-responsive (sidebar drawer, 44px touch targets, WCAG 2.1 AA)
-- [x] CLAUDE.md hierarchy: root + app-level files for all apps
-
-Frontend (`apps/web`) — complete ✓:
-- [x] Tailwind CSS + design tokens (match dashboard)
-- [x] API client utility (public fetch wrapper, ISR revalidation)
-- [x] Public layout — sticky navbar (mobile drawer) + footer
-- [x] Homepage — hero, features strip, featured vehicles, dealer CTA
-- [x] Vehicle listing page (SSR, filter bar, URL-based filters, pagination)
-- [x] Vehicle detail page (specs grid, JSON-LD, sticky enquiry sidebar, WhatsApp CTA)
-- [x] Enquiry Server Action → POST /leads (Zod-validated, no auth)
-
-**Deliverable: freshautosworld can sign up, add vehicles, customers can browse and submit enquiries**
+All 11 services, auth flow, tenant/vehicle/lead CRUD, Swagger UI, dashboard + storefront Phase 1 UIs.
 
 ---
 
-### Phase 2 — CRM & Notifications
-- [x] Wire Resend (email) + Twilio (SMS/WhatsApp) in notifications-service
-- [x] Email to dealer on new enquiry + confirmation email to customer
-- [x] SMS alert to dealer on new enquiry (if tenant has phone on file)
-- [x] SMS alert to assigned sales agent when a lead is assigned to them
-- [ ] Replace placeholder API keys with real Resend + Twilio credentials in .env.development
-- [x] Implement Cloudinary upload in media-service — POST /vehicles/:id/images + DELETE /vehicles/:id/images
-- [ ] Replace placeholder Cloudinary credentials in .env.development
-- [x] Dashboard: lead detail + status update UI — /leads/[id] with status pipeline, agent assignment, notes, quick contact (email/phone/WhatsApp)
-- [x] Dashboard: vehicle image upload UI — /inventory/[id] with drag-and-drop upload, image gallery, delete; add-vehicle redirects to detail page after creation
-- [x] Dashboard: test drive calendar — /test-drives grouped by date (upcoming/past/unscheduled), schedule via date picker on lead detail page
-- [x] Dashboard: order/deal management UI — /orders list, /orders/new create form, /orders/[id] detail with status pipeline + notes
-- [x] Dashboard: staff management UI — /staff list with inline role change and deactivate, /staff/invite form (DEALER_ADMIN only)
-- [x] White-label storefront per tenant — dealer name/contact/tagline in navbar, footer, metadata, hero copy; sourced from env vars (Phase 3: replace with GET /tenants/public/:slug API call)
+### Phase 2 — CRM & Notifications (complete ✓ — credentials pending)
+Resend email + Twilio SMS wired; Cloudinary media upload; lead detail, image upload, test drive calendar, orders, staff management UIs; white-label storefront.
+- [ ] Replace placeholder Resend/Twilio credentials in `.env.development`
+- [ ] Replace placeholder Cloudinary credentials in `.env.development`
 
 ---
 
 ### Phase 3 — Monetization & CRM Depth
 
-#### Monetization (payments)
-- [ ] Implement Stripe subscription creation (payments-service)
-- [ ] Implement Paystack subscription creation
+#### Monetization
+- [ ] Stripe subscription creation (payments-service)
+- [ ] Paystack subscription creation
 - [ ] Payments DB entity (track active subscriptions)
 - [ ] Enforce tier limits in tenants-service (listing count, staff count)
 - [ ] Billing portal links for dealers
 - [ ] Platform admin: dealer subscription overview
 
-#### Storefront depth
-- [ ] Price range filter — min/max price inputs on the vehicles listing page; passed as `minPrice`/`maxPrice` query params to `GET /vehicles` (backend already supports these via VehicleSearchPayload). Buyers filter by budget first — this is the most-requested filter after body type.
-- [ ] Filter sidebar on desktop — move condition/fuel/transmission/body-type/price-range filters from a top bar into a fixed left sidebar on `lg+` screens. Top bar stays on mobile. More room for filters, always visible while scrolling through listings.
-- [ ] Larger vehicle photos on cards — increase card image height from `h-48` to `h-56` or `h-64` on the storefront `VehicleCard`. The photo is the product; buyers decide by image first. Cards in reference designs use 60%+ of card height for the photo.
-- [ ] Dealer info / about page (`/about`) — hours, map embed, contact form, WhatsApp button; fetches from tenants-service (requires public tenant endpoint: `GET /api/v1/tenants/public/:slug`)
-- [ ] Replace white-label env vars with API call to `GET /api/v1/tenants/public/:slug` — add public endpoint to api-gateway tenants module (no JWT required, returns safe public fields only)
-- [ ] Vehicle comparison — side-by-side up to 3 vehicles (client-side, stored in URL params)
-- [ ] Financing calculator — price, down payment, rate, term → monthly payment (client-side, no API)
-- [ ] Sitemap (`app/sitemap.ts`) — dynamic, lists all AVAILABLE vehicles with ISR revalidation
-- [ ] Wishlist / saved vehicles (localStorage for guests, user account later)
+#### Storefront
+- [ ] Price range filter — `minPrice`/`maxPrice` inputs → `GET /vehicles` (backend already supports these)
+- [ ] Filter sidebar on desktop (`lg+`) — move filters from top bar into fixed left sidebar; top bar stays on mobile
+- [ ] Larger vehicle photos on cards — increase `VehicleCard` image height from `h-48` to `h-56`/`h-64`
+- [ ] Dealer info / about page (`/about`) — hours, map, contact, WhatsApp; fetches `GET /api/v1/tenants/public/:slug`
+- [ ] Replace white-label env vars with `GET /api/v1/tenants/public/:slug` (add public endpoint, no JWT)
+- [ ] Vehicle comparison — side-by-side up to 3 vehicles (client-side, URL params)
+- [ ] Financing calculator — client-side only (price, down payment, rate, term → monthly payment)
+- [ ] Sitemap (`app/sitemap.ts`) — dynamic, AVAILABLE vehicles, ISR revalidation
+- [ ] Wishlist / saved vehicles (localStorage for guests)
 
-#### Dashboard depth
-- [ ] Notifications center — bell icon in header shows real list of recent new enquiries and scheduled test drives (poll `GET /leads?status=NEW&limit=10` on interval or use SSE)
-- [ ] Customer profiles — deduplicate leads by email, show all interactions per customer
+#### Dashboard
+- [ ] Notifications center — bell icon, poll `GET /leads?status=NEW&limit=10` or SSE
+- [ ] Customer profiles — deduplicate leads by email, show all interactions
 - [ ] Document uploads (contracts, titles) — attach files to orders via media-service
-- [ ] Password change — staff member can change their own password from settings
+- [ ] Password change — staff can change own password from settings
 
 ---
 
@@ -452,45 +410,28 @@ Frontend (`apps/web`) — complete ✓:
 - [ ] Social media auto-posting (new vehicle → Facebook/Instagram)
 - [ ] Custom domain support per dealer (Cloudflare Workers)
 - [ ] PWA manifest for customer website
-- [ ] Bulk CSV import for inventory (dashboard)
-- [ ] Price drop alerts (email/SMS via notifications-service when vehicle price drops)
+- [ ] Bulk CSV import for inventory
+- [ ] Price drop alerts (email/SMS when vehicle price drops)
 - [ ] Trade-in estimator on storefront
 
 ---
 
 ### Phase 5 — Production & Scale
 
-#### Infrastructure Upgrades
-
-- [ ] **TCP → RabbitMQ transport migration**
-  - Why: TCP works for Phase 1-4 but has no retry, no dead letter queue, no persistence. If a service is temporarily down, messages are lost. RabbitMQ adds reliable delivery, message acknowledgment, and retry with backoff — critical once real dealers depend on notifications.
-  - How: NestJS abstracts the transport layer. Only the `ClientsModule` config in each service changes — zero business logic changes. This is the payoff for the clean microservice architecture we built.
-  - Already in `docker-compose.yml` — just needs wiring up.
-
-- [ ] **Redis — caching + rate limiting**
-  - Why caching: `GET /vehicles` is public and unauthenticated — the most-hit endpoint. Without caching, every customer page load hits SQL Server. Redis caches the paginated vehicle listings (TTL 60s) eliminating redundant DB reads.
-  - Why rate limiting: public endpoints need protection against abuse and scraping. Redis-based rate limiting (sliding window) at the api-gateway level.
-  - Already in `docker-compose.yml` — just needs wiring up.
-
-- [ ] **Elasticsearch — vehicle search engine** (replaces SQL `LIKE` queries)
-  - Why: SQL Server `LIKE '%toyota%'` and `Between` for price/year ranges work for Phase 1-2 but break down when dealers have 200+ vehicles and customers filter by 5+ criteria simultaneously. Elasticsearch handles faceted search, relevance ranking, and typo tolerance (`Toyot` → Toyota) natively.
-  - Scope: index vehicle listings in Elasticsearch on create/update via vehicles-service. Replace `search()` method in vehicles-service to query Elasticsearch instead of SQL. SQL Server remains the source of truth.
-  - Already in `docker-compose.yml` — just needs wiring up.
-
-- [ ] **Loki + Grafana — centralized log aggregation** (replaces ad-hoc terminal logs)
-  - Why Loki over Kibana/Elasticsearch for logs: Elasticsearch is heavy infrastructure. Loki is purpose-built for logs — it indexes only metadata (labels), not full log content, making it 10x cheaper to run. Grafana is already the industry standard dashboard for operational monitoring.
-  - Why not Kibana for logs: We're already using Elasticsearch for vehicle search. Kibana would give us a second tool for logs when Grafana covers the same need more cheaply. Separate concerns: Elasticsearch + Kibana for search/analytics, Loki + Grafana for logs.
-  - Scope: add a Loki datasource to Grafana, ship logs from all 11 services via a log shipper (Promtail or Fluent Bit).
+#### Infrastructure (all already in `docker-compose.yml` — needs wiring)
+- [ ] **TCP → RabbitMQ** — adds retry, dead letter queue, persistence; only `ClientsModule` config changes per service
+- [ ] **Redis** — cache `GET /vehicles` (TTL 60s) + sliding-window rate limiting at api-gateway
+- [ ] **Elasticsearch** — replace SQL `LIKE` search in vehicles-service; SQL Server stays source of truth
+- [ ] **Loki + Grafana** — centralized log aggregation via Promtail/Fluent Bit (Loki for logs, Elasticsearch+Kibana for search)
 
 #### Reliability & Compliance
-
-- [ ] Azure SQL deployment (production SQL Server — Azure SQL managed, Nigeria + UK regions)
-- [ ] GitHub Actions CI/CD pipeline (build → test → deploy on push to main)
-- [ ] Sentry error tracking in all services (why: real-time error alerts with stack traces, better than reading Loki logs reactively — Sentry is proactive, Loki is archival)
-- [ ] Load testing (k6 or Artillery — validate system under 100 concurrent dealers)
+- [ ] Azure SQL deployment (managed, Nigeria + UK regions)
+- [ ] GitHub Actions CI/CD (build → test → deploy on push to main)
+- [ ] Sentry error tracking in all services
+- [ ] Load testing (k6 or Artillery — 100 concurrent dealers)
 - [ ] Multi-language (i18n) for web + dashboard
-- [ ] GDPR compliance: data export endpoint, data deletion endpoint, cookie consent
-- [ ] NDPR compliance (Nigeria Data Protection Regulation — overlaps with GDPR)
+- [ ] GDPR compliance: data export, data deletion, cookie consent
+- [ ] NDPR compliance (Nigeria Data Protection Regulation)
 
 ---
 
@@ -660,100 +601,14 @@ See `.env.development` / `.env.staging` / `.env.production` for the full list wi
 
 ## 14. Frontend Standards (Non-Negotiable)
 
-AutoNova is sold internationally to real businesses. Every screen must meet the standard
-of a commercial SaaS product (think: Linear, Vercel, Stripe Dashboard). These rules apply
-to **every** component and page in `apps/dashboard`, `apps/web`, and `apps/admin`.
+Full rules: **[`docs/FRONTEND.md`](docs/FRONTEND.md)**
 
-### Responsive Design — Mobile-First, Always
-
-- **Default to mobile layout**, then enhance for larger screens with `sm:`, `md:`, `lg:`, `xl:` prefixes
-- Every page must be **fully usable on 320px width** (smallest common phone) up to 2560px (wide monitor)
-- **Breakpoints** (Tailwind defaults — do not deviate):
-  - `sm` = 640px (landscape phone)
-  - `md` = 768px (tablet)
-  - `lg` = 1024px (laptop — sidebar shows on dashboard)
-  - `xl` = 1280px (desktop)
-  - `2xl` = 1536px (wide monitor)
-- **Dashboard sidebar**: hidden on mobile (< `lg`), visible as fixed sidebar on `lg+`. On mobile, opens as a slide-in drawer overlay controlled by a hamburger button in the header. Never block the main content on any screen size.
-- **Grid columns**: use `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` patterns — never assume two columns will fit on a phone
-- **Touch targets**: minimum 44×44px for all interactive elements (buttons, links, form inputs) — this is WCAG 2.5.5 and Apple HIG requirement
-- **Tables / lists**: on mobile, stack columns vertically or allow horizontal scroll with `overflow-x-auto` — never let content overflow the viewport
-- **Forms**: single-column on mobile, multi-column only on `sm+` — inputs must be full-width on small screens
-- **Typography scale**: body text minimum `text-sm` (14px) — never go below 12px for non-decorative text
-- **No horizontal scroll** on the page level — if content is wide, wrap or scroll within a container
-
-### Accessibility (WCAG 2.1 AA — Mandatory)
-
-- **Semantic HTML first**: use `<nav>`, `<main>`, `<header>`, `<aside>`, `<section>`, `<article>`, `<button>`, `<a>` correctly. Never use `<div>` as a button.
-- **Focus management**: every interactive element must be reachable and operable with keyboard alone. Tab order must be logical.
-- **Focus ring**: all focusable elements must have a visible focus ring — never `outline: none` without an alternative. Use the `focus-ring` utility class.
-- **Color contrast**: text must meet AA contrast ratios — 4.5:1 for normal text, 3:1 for large text. Never use muted-foreground text on muted backgrounds for important information.
-- **ARIA labels**: icon-only buttons MUST have `aria-label`. Decorative images use `alt=""`. Meaningful images have descriptive `alt` text.
-- **`role` attributes**: use `role="alert"` for error messages, `role="status"` for success notifications, `role="dialog"` for modals.
-- **Screen reader announcements**: use `aria-live="polite"` for dynamic content updates (toast notifications, status changes). Use `aria-live="assertive"` only for critical errors.
-- **`sr-only` class**: use for text that should be read by screen readers but not visible (e.g., icon button labels, skip links).
-- **Skip navigation link**: `apps/web` must have a "Skip to main content" link as the first focusable element.
-- **Form labels**: every `<input>`, `<select>`, `<textarea>` MUST have an associated `<label>` (use `htmlFor` / `id` pairing or wrap in `<label>`). Never rely on `placeholder` as the label.
-- **Error messages**: form errors must be programmatically associated with their input using `aria-describedby`.
-- **Loading states**: use `aria-busy="true"` on containers while loading, or replace with skeleton UI.
-- **Modal / dialog**: when opened, focus must move inside. `Escape` must close it. Focus must return to the trigger on close.
-
-### Visual Design Quality — International Commercial Standard
-
-- **Design tokens only**: never hardcode hex colors. Use only CSS variables (`text-foreground`, `bg-card`, `text-muted-foreground`, etc.) from the design system.
-- **Spacing system**: use only Tailwind spacing scale (multiples of 4px). Never use `px-3.5` for layout spacing — reserve odd values for fine-tuning small components.
-- **Typography hierarchy**: every page has exactly one `<h1>`. Section headings use `<h2>`. Sub-sections use `<h3>`. Never skip heading levels.
-- **No orphaned elements**: every page must have a clear information hierarchy — title → description → content → actions. Never dump content without context.
-- **Skeleton loaders, not spinners**: use animated skeleton placeholders for loading states. Full-page spinners are only acceptable for authentication redirects.
-- **Empty states are content**: every empty list/table must have an icon, a title, a helpful description, and a primary action (e.g., "Add first vehicle"). Never show a blank area.
-- **Consistent border radius**: use `rounded-xl` for cards/panels, `rounded-lg` for buttons/inputs, `rounded-full` for avatars/badges. Do not mix arbitrarily.
-- **Shadows with purpose**: `shadow-sm` for cards at rest, `shadow-md` on hover/active, `shadow-lg` for dropdowns/modals, `shadow-xl` for dialogs. Never use shadows decoratively.
-- **Icon consistency**: all icons from `lucide-react` only. Size: `h-4 w-4` for inline/button icons, `h-5 w-5` for nav items, `h-6 w-6` for feature icons, `h-8 w-8` for empty state icons. Never mix icon libraries.
-- **Animation with restraint**: use subtle transitions (`transition-colors`, `transition-shadow`, `transition-transform`) for hover/active states. Avoid layout-shifting animations. Respect `prefers-reduced-motion`.
-- **Images**: all `<img>` tags must have explicit `width` and `height` to prevent Cumulative Layout Shift (CLS). Use Next.js `<Image>` component for all images in Next.js apps.
-- **Loading performance**: lazy-load images below the fold. Import heavy third-party components dynamically with `next/dynamic`.
-
-### Component Architecture Rules (Frontend)
-
-```
-components/
-  ui/          ← Atoms: Button, Input, Badge, Card, Label, Select, Textarea
-               ← No business logic. Pure styling primitives only.
-               ← Never import from app/ or lib/api/
-
-  common/      ← Molecules: StatsCard, PageHeader, EmptyState, Toaster, Pagination
-               ← Composed from ui/ atoms + minor logic (e.g., toast auto-dismiss)
-               ← Never import from specific features (inventory/, leads/)
-
-  layout/      ← Organisms: Sidebar, Header
-               ← May read from stores. No API calls.
-
-  features/    ← Feature-specific components (e.g., VehicleCard, LeadRow)
-               ← Knows about domain types. May receive server-fetched data as props.
-```
-
-- **Server Components by default** — only add `'use client'` when you need hooks, event handlers, or browser APIs
-- **Data fetching in Server Components** — never fetch data in `useEffect`. Use Server Components or Server Actions.
-- **No prop drilling beyond 2 levels** — use Zustand store or React context for deeper state
-- **Every interactive element that mutates data** uses a Server Action, not a client-side fetch
-- **URL as state for filters/pagination** — use `useSearchParams` + `router.push` for filter state so URLs are shareable and back-button works
-
-### Performance Standards
-
-- **Core Web Vitals targets** (measured in production):
-  - LCP (Largest Contentful Paint) < 2.5s
-  - FID / INP (Interaction to Next Paint) < 200ms
-  - CLS (Cumulative Layout Shift) < 0.1
-- **Font loading**: use `display: 'swap'` for Google Fonts. Subset to `latin` only unless a market requires extended characters.
-- **Image formats**: WebP preferred. Use Next.js `<Image>` with `priority` on above-the-fold images.
-- **Bundle size**: dynamic import heavy components (date pickers, rich text editors, charts). Keep the initial bundle under 200KB gzipped.
-- **No layout shift from async data**: reserve space with skeleton loaders before data arrives.
-
-### Internationalisation (i18n) Preparation
-
-AutoNova serves Nigeria, UK, and will expand globally. Even before full i18n is implemented:
-- **Never hardcode currency symbols** — always use `formatCurrency(amount, currency)` from `@/lib/utils`
-- **Never hardcode date formats** — always use `formatDate(date)` from `@/lib/utils`
-- **Never hardcode measurement units** — always use `formatMileage(value, unit)` from `@/lib/utils`
-- **All user-facing strings in English** for now, but written so they can be extracted into i18n keys later (no string interpolation that breaks translation — use template variables)
-- **RTL readiness**: do not use `left`/`right` CSS properties directly — prefer `start`/`end` or Tailwind's `ps-`/`pe-` logical properties where future RTL support is needed
+Summary of key constraints:
+- **Mobile-first**, 320px–2560px. Touch targets 44×44px min. No page-level horizontal scroll.
+- **WCAG 2.1 AA**: semantic HTML, visible focus rings, ARIA labels on icon buttons, `aria-describedby` on form errors.
+- **Design tokens only** — no hardcoded hex. `lucide-react` icons only. `rounded-xl` cards, `rounded-lg` buttons.
+- **Server Components by default** — `'use client'` only for hooks/events/browser APIs.
+- **Mutations via Server Actions** — never client-side fetch for data writes.
+- **URL as state** for filters/pagination (`useSearchParams` + `router.push`).
+- **Skeletons not spinners** for loading states. Empty states need icon + title + description + action.
+- **formatCurrency / formatDate / formatMileage** from `@/lib/utils` — never hardcode units or symbols.

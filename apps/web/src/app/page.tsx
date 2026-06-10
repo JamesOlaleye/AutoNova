@@ -4,12 +4,8 @@ import { Car, Search, Shield, TrendingUp, ArrowRight } from 'lucide-react';
 import { getVehicles } from '@/lib/api/vehicles';
 import { VehicleCard } from '@/components/common/vehicle-card';
 import { Button } from '@/components/ui/button';
-import { dealerConfig } from '@/lib/dealer-config';
+import { getDealerConfig } from '@/lib/dealer-config';
 import type { Vehicle } from '@/types';
-
-export const metadata: Metadata = {
-  title: `${dealerConfig.name} — Find Your Next Vehicle`,
-};
 
 const features = [
   {
@@ -30,7 +26,10 @@ const features = [
 ];
 
 export default async function HomePage() {
-  const { data: featured, total } = await getVehicles({ limit: 6 });
+  const [{ data: featured, total }, dealer] = await Promise.all([
+    getVehicles({ limit: 6 }),
+    getDealerConfig(),
+  ]);
 
   return (
     <>
@@ -54,8 +53,8 @@ export default async function HomePage() {
               </span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base text-white/60 leading-relaxed">
-              Browse certified inventory from <strong className="text-white/90">{dealerConfig.name}</strong>.
-              {dealerConfig.city && ` Based in ${dealerConfig.city}.`}
+              Browse certified inventory from <strong className="text-white/90">{dealer.name}</strong>.
+              {dealer.city && ` Based in ${dealer.city}.`}
               {' '}New, used, and certified pre-owned vehicles.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -142,20 +141,20 @@ export default async function HomePage() {
               Ready to find your car?
             </h2>
             <p className="mt-3 text-base text-white/70 leading-relaxed">
-              The team at <strong className="text-white">{dealerConfig.name}</strong> is here to help
+              The team at <strong className="text-white">{dealer.name}</strong> is here to help
               you find the perfect vehicle. Browse our full inventory or get in touch.
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Button asChild size="lg" variant="outline" className="w-full border-white/30 bg-white text-primary hover:bg-white/90 sm:w-auto">
                 <Link href="/vehicles">Browse Inventory</Link>
               </Button>
-              {dealerConfig.phone && (
+              {dealer.phone && (
                 <Button asChild size="lg" variant="ghost" className="w-full border border-white/20 text-white hover:bg-white/10 sm:w-auto">
                   <a
-                    href={`https://wa.me/${dealerConfig.phone.replace(/\D/g, '')}`}
+                    href={`https://wa.me/${dealer.phone.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`WhatsApp ${dealerConfig.name}`}
+                    aria-label={`WhatsApp ${dealer.name}`}
                   >
                     WhatsApp Us
                   </a>

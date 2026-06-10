@@ -4,6 +4,7 @@ import { SERVICES, USER_PATTERNS } from '@autonova/types';
 import { BaseGatewayService } from '../common/services/base-gateway.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UsersGatewayService extends BaseGatewayService {
@@ -25,5 +26,9 @@ export class UsersGatewayService extends BaseGatewayService {
 
   remove(id: string, tenantId: string) {
     return this.send(this.client, USER_PATTERNS.DELETE, { id, tenantId });
+  }
+
+  changePassword(userId: string, dto: ChangePasswordDto, tenantId: string) {
+    return this.send(this.client, USER_PATTERNS.CHANGE_PASSWORD, { ...dto, id: userId, tenantId });
   }
 }

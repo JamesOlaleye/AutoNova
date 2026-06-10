@@ -5,7 +5,7 @@ import { loginApi, logoutApi, registerStaffApi } from '@/lib/api/auth';
 import { createVehicle, updateVehicle, uploadVehicleImage, deleteVehicleImage } from '@/lib/api/vehicles';
 import { updateLead } from '@/lib/api/leads';
 import { createOrder, updateOrder } from '@/lib/api/orders';
-import { updateUser, deleteUser } from '@/lib/api/users';
+import { updateUser, deleteUser, changePassword } from '@/lib/api/users';
 import { setSession, getSession, clearSession } from '@/lib/session';
 import { ApiError } from '@/lib/api';
 import { createVehicleSchema } from '@/lib/schemas/vehicle.schema';
@@ -384,4 +384,30 @@ export async function removeStaffAction(
   }
 
   return {};
+}
+
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+export async function changePasswordAction(
+  _prevState: { error?: string; success?: boolean } | null,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const currentPassword = formData.get('currentPassword') as string;
+  const newPassword = formData.get('newPassword') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!currentPassword || !newPassword || !confirmPassword) return { error: 'All fields are required' };
+  if (newPassword.length < 8) return { error: 'New password must be at least 8 characters' };
+  if (newPassword !== confirmPassword) return { error: 'Passwords do not match' };
+
+  try {
+    await changePassword(currentPassword, newPassword, session.token, session.tenantId);
+    return { success: true };
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to change password. Please try again.' };
+  }
 }

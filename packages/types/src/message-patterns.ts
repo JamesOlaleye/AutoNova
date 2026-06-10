@@ -22,6 +22,7 @@ export const TENANT_PATTERNS = {
   CREATE: 'tenants.create',
   FIND_BY_ID: 'tenants.findById',
   FIND_BY_SLUG: 'tenants.findBySlug',
+  FIND_PUBLIC: 'tenants.findPublic',
   UPDATE: 'tenants.update',
   GET_ALL: 'tenants.getAll',
   DEACTIVATE: 'tenants.deactivate',
@@ -34,6 +35,7 @@ export const USER_PATTERNS = {
   FIND_ALL: 'users.findAll',
   UPDATE: 'users.update',
   DELETE: 'users.delete',
+  CHANGE_PASSWORD: 'users.changePassword',
 } as const;
 
 export const VEHICLE_PATTERNS = {

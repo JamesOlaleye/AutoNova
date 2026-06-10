@@ -1,24 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Dark navy background matching sidebar -->
-  <rect width="32" height="32" rx="7" fill="#0F172A"/>
+  <rect width="32" height="32" rx="7" fill="#064E3B"/>
 
   <!-- Car body -->
-  <rect x="3" y="17" width="26" height="7" rx="2" fill="#3B82F6"/>
+  <rect x="3" y="17" width="26" height="7" rx="2" fill="#10B981"/>
 
   <!-- Cabin / roof -->
-  <path d="M9 17 L11.5 11.5 L20.5 11.5 L23 17 Z" fill="#3B82F6"/>
+  <path d="M9 17 L11.5 11.5 L20.5 11.5 L23 17 Z" fill="#10B981"/>
 
   <!-- Windshield tint -->
-  <path d="M17 16.5 L19 12 L22 12 L22 16.5 Z" fill="#0F172A" opacity="0.35"/>
-  <path d="M10 16.5 L10 12 L13 12 L15 16.5 Z" fill="#0F172A" opacity="0.35"/>
+  <path d="M17 16.5 L19 12 L22 12 L22 16.5 Z" fill="#064E3B" opacity="0.35"/>
+  <path d="M10 16.5 L10 12 L13 12 L15 16.5 Z" fill="#064E3B" opacity="0.35"/>
 
   <!-- Left wheel -->
-  <circle cx="9"  cy="24" r="3.5" fill="#0F172A"/>
-  <circle cx="9"  cy="24" r="2.1" fill="#60A5FA"/>
-  <circle cx="9"  cy="24" r="1"   fill="#0F172A"/>
+  <circle cx="9"  cy="24" r="3.5" fill="#064E3B"/>
+  <circle cx="9"  cy="24" r="2.1" fill="#34D399"/>
+  <circle cx="9"  cy="24" r="1"   fill="#064E3B"/>
 
   <!-- Right wheel -->
-  <circle cx="23" cy="24" r="3.5" fill="#0F172A"/>
-  <circle cx="23" cy="24" r="2.1" fill="#60A5FA"/>
-  <circle cx="23" cy="24" r="1"   fill="#0F172A"/>
+  <circle cx="23" cy="24" r="3.5" fill="#064E3B"/>
+  <circle cx="23" cy="24" r="2.1" fill="#34D399"/>
+  <circle cx="23" cy="24" r="1"   fill="#064E3B"/>
 </svg>

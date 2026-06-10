@@ -37,6 +37,12 @@ export class Tenant {
   logo: string;
 
   @Column({ nullable: true })
+  tagline: string;
+
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true })
   customDomain: string;
 
   @Column({ nullable: true })

@@ -50,6 +50,20 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
+export interface DealerProfile {
+  name: string;
+  slug: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  logo: string | null;
+  tagline: string | null;
+  country: string;
+  currency: string;
+  locale: string;
+}
+
 export interface VehicleFilters {
   page?: number;
   limit?: number;

@@ -42,4 +42,9 @@ export class UsersController {
   remove(@Payload() payload: FindUserByIdPayload) {
     return this.usersService.remove(payload.id, payload.tenantId);
   }
+
+  @MessagePattern(USER_PATTERNS.CHANGE_PASSWORD)
+  changePassword(@Payload() payload: { id: string; tenantId: string; currentPassword: string; newPassword: string }) {
+    return this.usersService.changePassword(payload);
+  }
 }

@@ -3,17 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Car, Menu, X, Search } from 'lucide-react';
+import { Car, Menu, X, Search, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { dealerConfig } from '@/lib/dealer-config';
+import type { DealerProfile } from '@/types';
 
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/vehicles', label: 'Browse Vehicles' },
+  { href: '/about', label: 'About' },
+  { href: '/financing', label: 'Finance Calculator' },
+  { href: '/trade-in', label: 'Trade-In' },
 ];
 
-export function Navbar() {
+export function Navbar({ dealer }: { dealer: DealerProfile }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -21,15 +24,15 @@ export function Navbar() {
     <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="container flex h-16 items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label={`${dealerConfig.name} home`}>
+        <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label={`${dealer.name} home`}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-sm">
             <Car className="h-4 w-4 text-white" aria-hidden="true" />
           </div>
-          <span className="text-base font-bold tracking-tight text-foreground">{dealerConfig.name}</span>
+          <span className="text-base font-bold tracking-tight text-foreground">{dealer.name}</span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
           {navLinks.map(({ href, label }) => {
             const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
             return (
@@ -38,7 +41,7 @@ export function Navbar() {
                 href={href}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                  'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -51,11 +54,10 @@ export function Navbar() {
         </nav>
 
         {/* Desktop actions */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <Button asChild size="sm" variant="ghost">
-            <Link href="/vehicles">
-              <Search className="h-4 w-4" aria-hidden="true" />
-              Search
+            <Link href="/wishlist" aria-label="Saved vehicles">
+              <Heart className="h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
           <Button asChild size="sm">
@@ -63,25 +65,32 @@ export function Navbar() {
           </Button>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen
-            ? <X className="h-5 w-5" aria-hidden="true" />
-            : <Menu className="h-5 w-5" aria-hidden="true" />}
-        </button>
+        {/* Mobile right side */}
+        <div className="flex items-center gap-1 lg:hidden">
+          <Button asChild size="sm" variant="ghost" className="h-10 w-10 p-0">
+            <Link href="/wishlist" aria-label="Saved vehicles">
+              <Heart className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen
+              ? <X className="h-5 w-5" aria-hidden="true" />
+              : <Menu className="h-5 w-5" aria-hidden="true" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 top-16 z-40 bg-black/20 md:hidden" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+          <div className="fixed inset-0 top-16 z-40 bg-black/20 lg:hidden" onClick={() => setMobileOpen(false)} aria-hidden="true" />
           <nav
-            className="absolute left-0 right-0 top-full z-50 border-b bg-white p-4 shadow-lg md:hidden animate-fade-in"
+            className="absolute left-0 right-0 top-full z-50 border-b bg-white p-4 shadow-lg lg:hidden"
             aria-label="Mobile navigation"
           >
             <ul className="space-y-1">

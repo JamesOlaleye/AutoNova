@@ -40,6 +40,28 @@ export class TenantsService {
     return this.tenantRepo.find({ order: { createdAt: 'DESC' } });
   }
 
+  async findPublic(slug: string): Promise<{
+    name: string; slug: string; email: string; phone: string | null;
+    address: string | null; city: string | null; logo: string | null;
+    tagline: string | null; country: string; currency: string; locale: string;
+  }> {
+    const tenant = await this.tenantRepo.findOne({ where: { slug, isActive: true } });
+    if (!tenant) throw new RpcException({ message: 'Dealer not found', statusCode: 404 });
+    return {
+      name: tenant.name,
+      slug: tenant.slug,
+      email: tenant.email,
+      phone: tenant.phone,
+      address: tenant.address,
+      city: tenant.city ?? null,
+      logo: tenant.logo,
+      tagline: tenant.tagline ?? null,
+      country: tenant.country,
+      currency: tenant.currency,
+      locale: tenant.locale,
+    };
+  }
+
   async deactivate(id: string): Promise<{ message: string }> {
     await this.tenantRepo.update({ id }, { isActive: false });
     return { message: 'Tenant deactivated' };
