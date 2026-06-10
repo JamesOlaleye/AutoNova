@@ -12,6 +12,7 @@ import { getUsers } from '@/lib/api/users';
 import { Badge } from '@/components/ui/badge';
 import { OrderStatusUpdate } from './_components/order-status-update';
 import { OrderNotes } from './_components/order-notes';
+import { OrderDocuments } from './_components/order-documents';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { ORDER_STATUS_CONFIG, ORDER_TYPE_LABEL } from '@/constants/order.constants';
@@ -156,6 +157,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
           {/* Notes */}
           <section className="rounded-xl border bg-card p-5 shadow-sm">
             <OrderNotes orderId={order.id} initialNotes={order.notes} />
+          </section>
+
+          {/* Documents */}
+          <section className="rounded-xl border bg-card p-5 shadow-sm">
+            <OrderDocuments
+              orderId={order.id}
+              initialDocuments={order.documents ?? []}
+            />
           </section>
         </div>
 

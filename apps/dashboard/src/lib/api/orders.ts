@@ -59,3 +59,33 @@ export async function updateOrder(
     tenantId,
   });
 }
+
+export async function uploadOrderDocument(
+  orderId: string,
+  base64: string,
+  name: string,
+  docType: string,
+  token: string,
+  tenantId: string,
+): Promise<Order> {
+  return apiRequest<Order>(`/orders/${orderId}/documents`, {
+    method: 'POST',
+    body: { base64, name, docType },
+    token,
+    tenantId,
+  });
+}
+
+export async function deleteOrderDocument(
+  orderId: string,
+  publicId: string,
+  token: string,
+  tenantId: string,
+): Promise<Order> {
+  return apiRequest<Order>(`/orders/${orderId}/documents`, {
+    method: 'DELETE',
+    body: { publicId },
+    token,
+    tenantId,
+  });
+}

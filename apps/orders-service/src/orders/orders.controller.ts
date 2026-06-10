@@ -1,6 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ORDER_PATTERNS, CreateOrderPayload, UpdateOrderPayload } from '@autonova/types';
+import {
+  ORDER_PATTERNS,
+  AddOrderDocumentPayload,
+  CreateOrderPayload,
+  RemoveOrderDocumentPayload,
+  UpdateOrderPayload,
+} from '@autonova/types';
 import { OrdersService } from './orders.service';
 
 @Controller()
@@ -25,5 +31,15 @@ export class OrdersController {
   @MessagePattern(ORDER_PATTERNS.UPDATE)
   update(@Payload() payload: UpdateOrderPayload) {
     return this.ordersService.update(payload);
+  }
+
+  @MessagePattern(ORDER_PATTERNS.ADD_DOCUMENT)
+  addDocument(@Payload() payload: AddOrderDocumentPayload) {
+    return this.ordersService.addDocument(payload);
+  }
+
+  @MessagePattern(ORDER_PATTERNS.REMOVE_DOCUMENT)
+  removeDocument(@Payload() payload: RemoveOrderDocumentPayload) {
+    return this.ordersService.removeDocument(payload);
   }
 }

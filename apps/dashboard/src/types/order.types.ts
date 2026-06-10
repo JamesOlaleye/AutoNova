@@ -1,5 +1,14 @@
 export type OrderType = 'PURCHASE' | 'FINANCING' | 'LEASE';
 export type OrderStatus = 'PENDING' | 'NEGOTIATING' | 'FINANCED' | 'COMPLETED' | 'CANCELLED';
+export type OrderDocType = 'CONTRACT' | 'TITLE' | 'ID' | 'INSURANCE' | 'OTHER';
+
+export interface OrderDocument {
+  url: string;
+  publicId: string;
+  name: string;
+  docType: OrderDocType;
+  uploadedAt: string;
+}
 
 export interface Order {
   id: string;
@@ -15,6 +24,7 @@ export interface Order {
   downPayment: number | null;
   financingTerm: number | null;
   notes: string | null;
+  documents: OrderDocument[] | null;
   closedAt: string | null;
   createdAt: string;
   updatedAt: string;

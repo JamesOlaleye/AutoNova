@@ -39,4 +39,7 @@ export class Order extends BaseEntity {
 
   @Column({ nullable: true })
   closedAt: Date;
+
+  @Column({ type: 'simple-json', nullable: true })
+  documents: { url: string; publicId: string; name: string; docType: string; uploadedAt: string }[];
 }

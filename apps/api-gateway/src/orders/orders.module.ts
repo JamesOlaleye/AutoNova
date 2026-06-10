@@ -15,6 +15,14 @@ import { OrdersGatewayService } from './orders.gateway.service';
           port: parseInt(process.env.ORDERS_SERVICE_PORT || '3006'),
         },
       },
+      {
+        name: SERVICES.MEDIA,
+        transport: Transport.TCP,
+        options: {
+          host: process.env.MEDIA_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.MEDIA_SERVICE_PORT || '3008'),
+        },
+      },
     ]),
   ],
   controllers: [OrdersController],

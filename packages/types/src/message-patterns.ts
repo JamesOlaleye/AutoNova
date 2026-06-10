@@ -62,6 +62,8 @@ export const ORDER_PATTERNS = {
   FIND_BY_ID: 'orders.findById',
   FIND_ALL: 'orders.findAll',
   UPDATE: 'orders.update',
+  ADD_DOCUMENT: 'orders.addDocument',
+  REMOVE_DOCUMENT: 'orders.removeDocument',
 } as const;
 
 export const NOTIFICATION_PATTERNS = {

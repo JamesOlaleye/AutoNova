@@ -1,5 +1,14 @@
 export type OrderType = 'PURCHASE' | 'FINANCING' | 'LEASE';
 export type OrderStatus = 'PENDING' | 'NEGOTIATING' | 'FINANCED' | 'COMPLETED' | 'CANCELLED';
+export type OrderDocType = 'CONTRACT' | 'TITLE' | 'ID' | 'INSURANCE' | 'OTHER';
+
+export interface OrderDocument {
+  url: string;
+  publicId: string;
+  name: string;
+  docType: OrderDocType;
+  uploadedAt: string;
+}
 
 export interface CreateOrderPayload {
   tenantId: string;
@@ -24,4 +33,19 @@ export interface UpdateOrderPayload {
   downPayment?: number;
   financingTerm?: number;
   notes?: string;
+}
+
+export interface AddOrderDocumentPayload {
+  id: string;
+  tenantId: string;
+  url: string;
+  publicId: string;
+  name: string;
+  docType: OrderDocType;
+}
+
+export interface RemoveOrderDocumentPayload {
+  id: string;
+  tenantId: string;
+  publicId: string;
 }

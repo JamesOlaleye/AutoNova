@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
@@ -52,5 +52,32 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Updated order' })
   update(@Param('id') id: string, @Body() body: UpdateOrderDto, @TenantId() tenantId: string) {
     return this.ordersService.update(id, body, tenantId);
+  }
+
+  @Post(':id/documents')
+  @UseGuards(RolesGuard)
+  @Roles('DEALER_ADMIN', 'SALES_AGENT', 'FINANCE_MANAGER', 'PLATFORM_ADMIN')
+  @ApiOperation({ summary: 'Upload a document to an order' })
+  @ApiResponse({ status: 201, description: 'Document uploaded — returns updated order' })
+  uploadDocument(
+    @Param('id') id: string,
+    @Body() body: { base64: string; name: string; docType: string },
+    @TenantId() tenantId: string,
+  ) {
+    return this.ordersService.uploadDocument(id, tenantId, body.base64, body.name, body.docType as import('@autonova/types').OrderDocType);
+  }
+
+  @Delete(':id/documents')
+  @UseGuards(RolesGuard)
+  @Roles('DEALER_ADMIN', 'SALES_AGENT', 'FINANCE_MANAGER', 'PLATFORM_ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remove a document from an order' })
+  @ApiResponse({ status: 200, description: 'Document removed — returns updated order' })
+  deleteDocument(
+    @Param('id') id: string,
+    @Body() body: { publicId: string },
+    @TenantId() tenantId: string,
+  ) {
+    return this.ordersService.deleteDocument(id, tenantId, body.publicId);
   }
 }

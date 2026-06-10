@@ -2,7 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RpcException } from '@nestjs/microservices';
-import { CreateOrderPayload, PaginatedResponse, UpdateOrderPayload } from '@autonova/types';
+import {
+  AddOrderDocumentPayload,
+  CreateOrderPayload,
+  PaginatedResponse,
+  RemoveOrderDocumentPayload,
+  UpdateOrderPayload,
+} from '@autonova/types';
 import { Order } from './entities/order.entity';
 
 @Injectable()
@@ -40,5 +46,32 @@ export class OrdersService {
     }
     await this.orderRepo.update({ id, tenantId }, updates);
     return this.findById(id, tenantId);
+  }
+
+  async addDocument(payload: AddOrderDocumentPayload): Promise<Order> {
+    const order = await this.findById(payload.id, payload.tenantId);
+    const existing = order.documents ?? [];
+    const doc = {
+      url: payload.url,
+      publicId: payload.publicId,
+      name: payload.name,
+      docType: payload.docType,
+      uploadedAt: new Date().toISOString(),
+    };
+    await this.orderRepo.update(
+      { id: payload.id, tenantId: payload.tenantId },
+      { documents: [...existing, doc] },
+    );
+    return this.findById(payload.id, payload.tenantId);
+  }
+
+  async removeDocument(payload: RemoveOrderDocumentPayload): Promise<Order> {
+    const order = await this.findById(payload.id, payload.tenantId);
+    const filtered = (order.documents ?? []).filter((d) => d.publicId !== payload.publicId);
+    await this.orderRepo.update(
+      { id: payload.id, tenantId: payload.tenantId },
+      { documents: filtered },
+    );
+    return this.findById(payload.id, payload.tenantId);
   }
 }

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { loginApi, logoutApi, registerStaffApi } from '@/lib/api/auth';
 import { createVehicle, updateVehicle, uploadVehicleImage, deleteVehicleImage } from '@/lib/api/vehicles';
 import { updateLead } from '@/lib/api/leads';
-import { createOrder, updateOrder } from '@/lib/api/orders';
+import { createOrder, updateOrder, uploadOrderDocument, deleteOrderDocument } from '@/lib/api/orders';
 import { updateUser, deleteUser, changePassword } from '@/lib/api/users';
 import { setSession, getSession, clearSession } from '@/lib/session';
 import { ApiError } from '@/lib/api';
@@ -297,6 +297,44 @@ export async function updateOrderNotesAction(
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Failed to save notes.' };
+  }
+
+  return {};
+}
+
+// ─── Order Documents ─────────────────────────────────────────────────────────
+
+export async function uploadOrderDocumentAction(
+  orderId: string,
+  base64: string,
+  name: string,
+  docType: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await uploadOrderDocument(orderId, base64, name, docType, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to upload document. Please try again.' };
+  }
+
+  return {};
+}
+
+export async function deleteOrderDocumentAction(
+  orderId: string,
+  publicId: string,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    await deleteOrderDocument(orderId, publicId, session.token, session.tenantId);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Failed to remove document.' };
   }
 
   return {};
