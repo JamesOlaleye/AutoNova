@@ -37,6 +37,11 @@ export class TenantsController {
     return this.tenantsService.findPublic(payload.slug);
   }
 
+  @MessagePattern(TENANT_PATTERNS.GET_PLAN)
+  getPlan(@Payload() payload: { tenantId: string }) {
+    return this.tenantsService.getPlan(payload.tenantId);
+  }
+
   @MessagePattern(TENANT_PATTERNS.DEACTIVATE)
   deactivate(@Payload() payload: { id: string }) {
     return this.tenantsService.deactivate(payload.id);

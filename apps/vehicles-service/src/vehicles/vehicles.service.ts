@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { Repository, Between, FindOptionsWhere } from 'typeorm';
-import { RpcException } from '@nestjs/microservices';
+import { firstValueFrom, timeout } from 'rxjs';
 import { Vehicle } from './entities/vehicle.entity';
 import {
   CreateVehiclePayload,
@@ -10,6 +11,9 @@ import {
   AddVehicleImagePayload,
   RemoveVehicleImagePayload,
   PaginatedResponse,
+  SERVICES,
+  TENANT_PATTERNS,
+  TenantPlanLimits,
 } from '@autonova/types';
 
 @Injectable()
@@ -17,11 +21,29 @@ export class VehiclesService {
   constructor(
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
+    @Inject(SERVICES.TENANTS)
+    private readonly tenantsClient: ClientProxy,
   ) {}
 
   async create(payload: CreateVehiclePayload): Promise<Vehicle> {
+    await this.enforceListingLimit(payload.tenantId);
     const vehicle = this.vehicleRepository.create(payload);
     return this.vehicleRepository.save(vehicle);
+  }
+
+  private async enforceListingLimit(tenantId: string): Promise<void> {
+    const [planData, count] = await Promise.all([
+      firstValueFrom<TenantPlanLimits>(
+        (this.tenantsClient.send(TENANT_PATTERNS.GET_PLAN, { tenantId }) as any).pipe(timeout(5000)),
+      ),
+      this.vehicleRepository.count({ where: { tenantId } }),
+    ]);
+    if (planData.listingLimit !== -1 && count >= planData.listingLimit) {
+      throw new RpcException({
+        message: `Listing limit reached for your ${planData.plan} plan (${planData.listingLimit} vehicles). Please upgrade to add more.`,
+        statusCode: 402,
+      });
+    }
   }
 
   async findById(id: string, tenantId: string): Promise<Vehicle> {

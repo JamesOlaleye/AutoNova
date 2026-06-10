@@ -2,8 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RpcException } from '@nestjs/microservices';
-import { CreateTenantPayload, UpdateTenantPayload } from '@autonova/types';
+import { CreateTenantPayload, UpdateTenantPayload, TenantPlanLimits } from '@autonova/types';
 import { Tenant } from './entities/tenant.entity';
+
+const PLAN_LIMITS: Record<string, { listingLimit: number; staffLimit: number }> = {
+  STARTER: { listingLimit: 30, staffLimit: 2 },
+  GROWTH:  { listingLimit: 200, staffLimit: 10 },
+  PRO:     { listingLimit: -1, staffLimit: -1 },
+};
 
 @Injectable()
 export class TenantsService {
@@ -60,6 +66,13 @@ export class TenantsService {
       currency: tenant.currency,
       locale: tenant.locale,
     };
+  }
+
+  async getPlan(tenantId: string): Promise<TenantPlanLimits> {
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+    if (!tenant) throw new RpcException({ message: 'Tenant not found', statusCode: 404 });
+    const limits = PLAN_LIMITS[tenant.plan] ?? PLAN_LIMITS.STARTER;
+    return { plan: tenant.plan as any, ...limits };
   }
 
   async deactivate(id: string): Promise<{ message: string }> {

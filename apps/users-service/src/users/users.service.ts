@@ -1,14 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { Repository } from 'typeorm';
-import { RpcException } from '@nestjs/microservices';
+import { firstValueFrom, timeout } from 'rxjs';
 import * as bcrypt from 'bcryptjs';
-import { CreateUserPayload, PaginatedResponse, UpdateUserPayload } from '@autonova/types';
+import {
+  CreateUserPayload,
+  PaginatedResponse,
+  UpdateUserPayload,
+  SERVICES,
+  TENANT_PATTERNS,
+  TenantPlanLimits,
+} from '@autonova/types';
 import { User } from './entities/user.entity';
+
+const STAFF_ROLES = new Set(['DEALER_ADMIN', 'SALES_AGENT', 'FINANCE_MANAGER']);
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private readonly userRepo: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @Inject(SERVICES.TENANTS) private readonly tenantsClient: ClientProxy,
+  ) {}
 
   async create(payload: CreateUserPayload): Promise<Omit<User, 'password'>> {
     const existing = await this.userRepo.findOne({
@@ -17,9 +30,34 @@ export class UsersService {
     if (existing) {
       throw new RpcException({ message: 'Email already registered', statusCode: 409 });
     }
-    const user = this.userRepo.create({ ...payload, role: payload.role || 'CUSTOMER' });
+    const role = payload.role || 'CUSTOMER';
+    if (STAFF_ROLES.has(role)) {
+      await this.enforceStaffLimit(payload.tenantId);
+    }
+    const user = this.userRepo.create({ ...payload, role });
     const saved = await this.userRepo.save(user);
     return this.sanitize(saved);
+  }
+
+  private async enforceStaffLimit(tenantId: string): Promise<void> {
+    const [planData, count] = await Promise.all([
+      firstValueFrom<TenantPlanLimits>(
+        (this.tenantsClient.send(TENANT_PATTERNS.GET_PLAN, { tenantId }) as any).pipe(timeout(5000)),
+      ),
+      this.userRepo.count({
+        where: [
+          { tenantId, role: 'DEALER_ADMIN' },
+          { tenantId, role: 'SALES_AGENT' },
+          { tenantId, role: 'FINANCE_MANAGER' },
+        ],
+      }),
+    ]);
+    if (planData.staffLimit !== -1 && count >= planData.staffLimit) {
+      throw new RpcException({
+        message: `Staff limit reached for your ${planData.plan} plan (${planData.staffLimit} staff). Please upgrade to add more.`,
+        statusCode: 402,
+      });
+    }
   }
 
   async findById(id: string, tenantId: string): Promise<User> {

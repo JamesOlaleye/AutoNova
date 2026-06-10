@@ -30,3 +30,9 @@ export interface ServiceResponse<T = any> {
   error?: string;
   statusCode?: number;
 }
+
+export interface TenantPlanLimits {
+  plan: TenantPlan;
+  listingLimit: number; // -1 = unlimited
+  staffLimit: number;   // -1 = unlimited
+}

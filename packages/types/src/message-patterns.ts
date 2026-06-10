@@ -26,6 +26,7 @@ export const TENANT_PATTERNS = {
   UPDATE: 'tenants.update',
   GET_ALL: 'tenants.getAll',
   DEACTIVATE: 'tenants.deactivate',
+  GET_PLAN: 'tenants.getPlan',
 } as const;
 
 export const USER_PATTERNS = {
