@@ -7,6 +7,7 @@ import {
   Settings,
   UsersRound,
   CalendarCheck,
+  Contact,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export const navigation: NavGroup[] = [
     items: [
       { href: '/inventory', label: 'Inventory', icon: Car },
       { href: '/leads', label: 'Enquiries', icon: Users },
+      { href: '/customers', label: 'Customers', icon: Contact },
       { href: '/orders', label: 'Orders', icon: ShoppingCart },
       { href: '/test-drives', label: 'Test Drives', icon: CalendarCheck },
     ],

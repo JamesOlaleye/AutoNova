@@ -72,7 +72,7 @@ export default async function CustomersPage() {
           {customers.map((c) => (
             <Link
               key={c.email}
-              href={`/leads?search=${encodeURIComponent(c.email)}`}
+              href={`/customers/${encodeURIComponent(c.email)}`}
               className="flex min-h-[72px] items-center gap-4 px-5 py-4 transition-colors hover:bg-muted"
             >
               {/* Avatar */}

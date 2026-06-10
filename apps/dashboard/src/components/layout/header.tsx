@@ -25,7 +25,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/settings': 'Settings',
   '/settings/password': 'Change Password',
   '/customers': 'Customer Profiles',
-  '/customers/': 'Customer Detail',
 };
 
 const ROLE_LABELS: Record<string, string> = {
